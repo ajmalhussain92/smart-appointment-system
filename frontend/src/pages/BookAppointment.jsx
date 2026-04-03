@@ -68,7 +68,7 @@ export default function BookAppointment() {
         )}
 
         {/* Progress Steps */}
-        <div className="card mb-4">
+        <div className="card mb-3">
           <div className="card-body py-3">
             <div className="d-flex align-items-center gap-0">
               {['Select Doctor', 'Pick Date', 'Choose Slot', 'Confirm'].map((s, i) => (
@@ -102,12 +102,12 @@ export default function BookAppointment() {
           </div>
         </div>
 
-        <div className="row g-4 book-grid">
+        <div className="row g-2 book-grid">
           {/* Left */}
           <div className="col-lg-8">
 
             {/* Step 1 — Doctor */}
-            <div className="card mb-4 fade-in">
+            <div className="card mb-2 fade-in">
               <div className="card-header d-flex align-items-center justify-content-between">
                 <div>
                   <div className="card-title-text">
@@ -124,7 +124,7 @@ export default function BookAppointment() {
                     <div className="spinner-border text-primary" style={{ width: 28, height: 28, borderWidth: 3 }} />
                   </div>
                 ) : (
-                  <div className="row g-3">
+                  <div className="row g-2">
                     {doctors.map(doc => (
                       <div className="col-6 col-md-4" key={doc._id}>
                         <div
@@ -171,7 +171,7 @@ export default function BookAppointment() {
 
             {/* Step 2 — Date */}
             {selectedDoctor && (
-              <div className="card mb-4 fade-in">
+              <div className="card mb-2 fade-in">
                 <div className="card-header">
                   <div className="card-title-text">
                     <span style={{ color: 'var(--primary)', marginRight: 8 }}>02</span>

@@ -96,7 +96,7 @@ export default function Dashboard() {
       <div className="page-content">
 
         {/* ── Stats Grid ── */}
-        <div className="row g-3 mb-4">
+        <div className="row g-3 mb-3">
           {stats.map((s, i) => (
             <div className="col-6 col-xl-3" key={i}>
               <div className="stat-card slide-up" style={{ animationDelay: `${i * 0.06}s` }}>
@@ -345,7 +345,7 @@ export default function Dashboard() {
 
           {/* ── Patient Quick Actions ── */}
           {!isDoctor && (
-            <div className="col-12 mt-1">
+            <div className="col-12">
               <div className="card scale-in">
                 <div className="card-header">
                   <div className="card-title-text">⚡ Quick Actions</div>

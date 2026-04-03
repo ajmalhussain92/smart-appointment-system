@@ -1,195 +1,266 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { appointmentAPI, doctorAPI } from '../api/services';
-import AppointmentCard from '../components/AppointmentCard';
-import StatsCard from '../components/StatsCard';
+import TopHeader from '../components/TopHeader';
 import Spinner from '../components/Spinner';
-import Toast from '../components/Toast';
 import NotificationBanner from '../components/NotificationBanner';
-import DoctorUtilization from '../components/DoctorUtilization';
 
-const REFRESH_INTERVAL = 30000; // auto-refresh every 30 seconds
+const STATUS_BADGE = {
+  waiting:   <span className="badge badge-waiting">⏳ Waiting</span>,
+  completed: <span className="badge badge-completed">✓ Completed</span>,
+  cancelled: <span className="badge badge-cancelled">✕ Cancelled</span>,
+  'no-show': <span className="badge badge-noshow">👻 No-Show</span>,
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [isAvailable, setIsAvailable] = useState(user?.isAvailable ?? true);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
+  const [filter, setFilter] = useState('all');
   const [lastRefresh, setLastRefresh] = useState(new Date());
-
-  const showToast = (message, type = 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const fetchAppointments = useCallback(async (silent = false) => {
     try {
       const { data } = await appointmentAPI.getMy();
       setAppointments(data);
       setLastRefresh(new Date());
+    } catch (e) {
+      console.error(e);
+    } finally {
       if (!silent) setLoading(false);
-    } catch {
-      if (!silent) {
-        showToast('Failed to load appointments');
-        setLoading(false);
-      }
     }
   }, []);
 
-  // Initial load
   useEffect(() => { fetchAppointments(); }, [fetchAppointments]);
-
-  // Auto-refresh every 30s
   useEffect(() => {
-    const interval = setInterval(() => fetchAppointments(true), REFRESH_INTERVAL);
-    return () => clearInterval(interval);
+    const t = setInterval(() => fetchAppointments(true), 30000);
+    return () => clearInterval(t);
   }, [fetchAppointments]);
 
-  const handleToggleAvailability = async () => {
+  const handleStatusChange = async (id, status) => {
+    try { await appointmentAPI.updateStatus(id, status); fetchAppointments(true); }
+    catch (e) { console.error(e); }
+  };
+
+  const handleCancel = async (id) => {
+    if (!window.confirm('Cancel this appointment?')) return;
+    try { await appointmentAPI.cancel(id); fetchAppointments(true); }
+    catch (e) { console.error(e); }
+  };
+
+  const handleToggle = async () => {
     try {
       const { data } = await doctorAPI.toggleAvailability();
       setIsAvailable(data.isAvailable);
-      showToast(
-        data.isAvailable ? 'You are now available' : 'You are now unavailable',
-        'info'
-      );
-    } catch {
-      showToast('Failed to update availability');
-    }
+    } catch (e) { console.error(e); }
   };
 
-  const waiting = appointments.filter((a) => a.status === 'waiting');
-  const completed = appointments.filter((a) => a.status === 'completed');
-  const cancelled = appointments.filter((a) => a.status !== 'waiting' && a.status !== 'completed');
   const isDoctor = user?.role === 'doctor';
+  const today = new Date().toISOString().split('T')[0];
+
+  const waiting   = appointments.filter(a => a.status === 'waiting');
+  const completed = appointments.filter(a => a.status === 'completed');
+  const cancelled = appointments.filter(a => a.status !== 'waiting' && a.status !== 'completed');
+  const todayAppts = appointments.filter(a => a.date === today);
+
+  const filtered = filter === 'all' ? appointments
+    : appointments.filter(a => a.status === filter);
+
+  const utilization = todayAppts.length > 0
+    ? Math.round((todayAppts.filter(a => a.status === 'completed').length / todayAppts.length) * 100)
+    : 0;
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <h2 style={styles.title}>
-            {isDoctor ? '🩺 Doctor Dashboard' : '👤 My Appointments'}
-          </h2>
-          <p style={styles.sub}>
-            Welcome back, {user?.name} &nbsp;·&nbsp;
-            <span style={styles.refresh}>
-              Last updated: {lastRefresh.toLocaleTimeString()}
-            </span>
-          </p>
-        </div>
-        <div style={styles.headerActions}>
-          {isDoctor && (
+    <div>
+      <TopHeader
+        title={isDoctor ? 'Doctor Dashboard' : 'My Appointments'}
+        subtitle={`Last updated: ${lastRefresh.toLocaleTimeString()}`}
+        actions={
+          isDoctor && (
             <button
-              onClick={handleToggleAvailability}
-              style={{ ...styles.toggleBtn, background: isAvailable ? '#10b981' : '#ef4444' }}
+              className={`btn btn-sm ${isAvailable ? 'btn-success' : 'btn-danger'}`}
+              onClick={handleToggle}
             >
               {isAvailable ? '● Available' : '● Unavailable'}
             </button>
+          )
+        }
+      />
+
+      <div className="page-body">
+        <NotificationBanner appointments={appointments} />
+
+        {/* Stats */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#fef3c7' }}>⏳</div>
+            <div>
+              <div className="stat-value">{waiting.length}</div>
+              <div className="stat-label">In Queue</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#d1fae5' }}>✅</div>
+            <div>
+              <div className="stat-value">{completed.length}</div>
+              <div className="stat-label">Completed</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#fee2e2' }}>✕</div>
+            <div>
+              <div className="stat-value">{cancelled.length}</div>
+              <div className="stat-label">Cancelled</div>
+            </div>
+          </div>
+          {isDoctor ? (
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: '#ede9fe' }}>📊</div>
+              <div>
+                <div className="stat-value">{utilization}%</div>
+                <div className="stat-label">Today's Utilization</div>
+                <div className="progress-bar mt-4" style={{ width: 80, marginTop: 6 }}>
+                  <div className="progress-fill"
+                    style={{ width: `${utilization}%`, background: utilization > 70 ? '#16a34a' : '#d97706' }} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: '#dbeafe' }}>📋</div>
+              <div>
+                <div className="stat-value">{appointments.length}</div>
+                <div className="stat-label">Total Appointments</div>
+              </div>
+            </div>
           )}
-          {!isDoctor && (
-            <Link to="/book" style={styles.bookBtn}>+ Book Appointment</Link>
+        </div>
+
+        {/* Appointments Table */}
+        <div className="card animate-fade">
+          <div className="card-header">
+            <div>
+              <div className="card-title">
+                {isDoctor ? 'Patient Queue' : 'Appointment History'}
+                <span style={{ marginLeft: 8, fontSize: 12, color: '#6b7280', fontWeight: 400 }}>
+                  ● Live
+                </span>
+              </div>
+              <div className="card-subtitle">{filtered.length} records</div>
+            </div>
+            <div className="flex gap-2">
+              {['all', 'waiting', 'completed', 'cancelled'].map(f => (
+                <button
+                  key={f}
+                  className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setFilter(f)}
+                  style={{ textTransform: 'capitalize' }}
+                >
+                  {f}
+                </button>
+              ))}
+              {!isDoctor && (
+                <button className="btn btn-primary btn-sm" onClick={() => navigate('/book')}>
+                  + Book
+                </button>
+              )}
+            </div>
+          </div>
+
+          {loading ? (
+            <Spinner text="Loading appointments..." />
+          ) : filtered.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">📭</div>
+              <div className="empty-state-title">No appointments found</div>
+              <div className="empty-state-text">
+                {!isDoctor && <button className="btn btn-primary btn-sm mt-4" onClick={() => navigate('/book')}>Book Appointment</button>}
+              </div>
+            </div>
+          ) : (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>{isDoctor ? 'Patient' : 'Doctor'}</th>
+                    <th>Date</th>
+                    <th>Time Slot</th>
+                    <th>Queue</th>
+                    <th>Wait Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((a, i) => {
+                    const waitMins = a.status === 'waiting' ? ((a.queuePosition - 1) * 15) : null;
+                    return (
+                      <tr key={a._id} className="animate-slide">
+                        <td style={{ color: '#9ca3af', fontWeight: 600 }}>{i + 1}</td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#111827' }}>
+                            {isDoctor ? a.patient?.name : `Dr. ${a.doctor?.name}`}
+                          </div>
+                          {!isDoctor && a.doctor?.specialization && (
+                            <div style={{ fontSize: 12, color: '#6b7280' }}>{a.doctor.specialization}</div>
+                          )}
+                        </td>
+                        <td>{a.date}</td>
+                        <td>
+                          <span style={{ fontWeight: 600 }}>{a.timeSlot}</span>
+                        </td>
+                        <td>
+                          {a.status === 'waiting'
+                            ? <span style={{ fontWeight: 700, color: '#2563eb' }}>#{a.queuePosition}</span>
+                            : <span style={{ color: '#9ca3af' }}>—</span>}
+                        </td>
+                        <td>
+                          {waitMins !== null ? (
+                            <span style={{
+                              fontSize: 12, fontWeight: 600,
+                              color: waitMins === 0 ? '#16a34a' : waitMins <= 30 ? '#d97706' : '#dc2626'
+                            }}>
+                              {waitMins === 0 ? 'Next!' : `~${waitMins}m`}
+                            </span>
+                          ) : <span style={{ color: '#9ca3af' }}>—</span>}
+                        </td>
+                        <td>{STATUS_BADGE[a.status] || STATUS_BADGE.cancelled}</td>
+                        <td>
+                          {a.status === 'waiting' && (
+                            <div className="flex gap-2">
+                              {isDoctor && (
+                                <>
+                                  <button className="btn btn-success btn-sm"
+                                    onClick={() => handleStatusChange(a._id, 'completed')}>
+                                    ✓
+                                  </button>
+                                  <button className="btn btn-ghost btn-sm"
+                                    onClick={() => handleStatusChange(a._id, 'cancelled')}>
+                                    👻
+                                  </button>
+                                </>
+                              )}
+                              <button className="btn btn-outline btn-sm"
+                                onClick={() => handleCancel(a._id)}
+                                style={{ color: '#dc2626', borderColor: '#fca5a5' }}>
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
-
-      {toast && <Toast message={toast.message} type={toast.type} />}
-
-      {/* Notifications */}
-      <NotificationBanner appointments={appointments} />
-
-      {/* Stats */}
-      <div style={styles.statsRow}>
-        <StatsCard icon="⏳" label="Waiting" value={waiting.length} color="#f59e0b" />
-        <StatsCard icon="✅" label="Completed" value={completed.length} color="#10b981" />
-        <StatsCard icon="✕" label="Cancelled" value={cancelled.length} color="#ef4444" />
-        <StatsCard icon="📋" label="Total" value={appointments.length} color="#1a73e8" />
-      </div>
-
-      {/* Doctor utilization */}
-      {isDoctor && <DoctorUtilization appointments={appointments} />}
-
-      {/* Appointments */}
-      {loading ? (
-        <Spinner text="Loading appointments..." />
-      ) : appointments.length === 0 ? (
-        <div style={styles.empty}>
-          <p style={styles.emptyIcon}>📭</p>
-          <p>No appointments yet.</p>
-          {!isDoctor && (
-            <Link to="/book" style={styles.emptyLink}>Book your first appointment →</Link>
-          )}
-        </div>
-      ) : (
-        <>
-          {waiting.length > 0 && (
-            <section style={styles.section}>
-              <h3 style={styles.sectionTitle}>
-                ⏳ Queue — Waiting ({waiting.length})
-                <span style={styles.liveTag}>● LIVE</span>
-              </h3>
-              {waiting.map((a) => (
-                <AppointmentCard
-                  key={a._id}
-                  appointment={a}
-                  role={user.role}
-                  onUpdate={() => fetchAppointments(true)}
-                  onError={(msg) => showToast(msg)}
-                />
-              ))}
-            </section>
-          )}
-          {completed.length > 0 && (
-            <section style={styles.section}>
-              <h3 style={styles.sectionTitle}>✅ Completed ({completed.length})</h3>
-              {completed.map((a) => (
-                <AppointmentCard key={a._id} appointment={a} role={user.role}
-                  onUpdate={() => fetchAppointments(true)} onError={(msg) => showToast(msg)} />
-              ))}
-            </section>
-          )}
-          {cancelled.length > 0 && (
-            <section style={styles.section}>
-              <h3 style={styles.sectionTitle}>✕ Cancelled / No-Show ({cancelled.length})</h3>
-              {cancelled.map((a) => (
-                <AppointmentCard key={a._id} appointment={a} role={user.role}
-                  onUpdate={() => fetchAppointments(true)} onError={(msg) => showToast(msg)} />
-              ))}
-            </section>
-          )}
-        </>
-      )}
     </div>
   );
 }
-
-const styles = {
-  container: { maxWidth: 760, margin: '0 auto', padding: '32px 20px' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  title: { fontSize: 24, fontWeight: 700, color: '#1a1a2e', margin: 0 },
-  sub: { color: '#666', marginTop: 4, fontSize: 14 },
-  refresh: { fontSize: 12, color: '#aaa' },
-  headerActions: { display: 'flex', gap: 10, alignItems: 'center' },
-  toggleBtn: {
-    color: '#fff', border: 'none', padding: '10px 18px',
-    borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14,
-  },
-  bookBtn: {
-    background: '#1a73e8', color: '#fff', padding: '10px 18px',
-    borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 14,
-  },
-  statsRow: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
-  section: { marginBottom: 24 },
-  sectionTitle: {
-    fontSize: 15, fontWeight: 700, color: '#444',
-    marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10,
-  },
-  liveTag: {
-    fontSize: 11, color: '#10b981', fontWeight: 700, letterSpacing: 1,
-  },
-  empty: { textAlign: 'center', color: '#888', paddingTop: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyLink: { display: 'inline-block', marginTop: 12, color: '#1a73e8', fontWeight: 600 },
-};

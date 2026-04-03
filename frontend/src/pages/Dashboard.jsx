@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { appointmentAPI, doctorAPI } from '../api/services';
 import TopHeader from '../components/TopHeader';
+import { subscribeToQueue, unsubscribeFromQueue } from '../api/socket';
 
 const STATUS_BADGE = {
   waiting:   <span className="badge-status badge-waiting"><i className="bi bi-clock-fill" /> Waiting</span>,
@@ -36,6 +37,14 @@ export default function Dashboard() {
     const t = setInterval(() => fetchData(true), 30000);
     return () => clearInterval(t);
   }, [fetchData]);
+
+  // Socket real-time updates
+  useEffect(() => {
+    if (isDoctor && user?._id) {
+      subscribeToQueue(user._id, () => fetchData(true));
+    }
+    return () => unsubscribeFromQueue();
+  }, [isDoctor, user?._id, fetchData]);
 
   const handleStatus = async (id, status) => {
     try { await appointmentAPI.updateStatus(id, status); fetchData(true); } catch (e) { console.error(e); }

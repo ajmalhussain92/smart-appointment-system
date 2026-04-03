@@ -1,10 +1,12 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../App';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Sidebar({ collapsed, mobileOpen }) {
   const { user, logout } = useAuth();
   const { toggleCollapse } = useSidebar();
+  const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (p) => location.pathname === p;
@@ -56,6 +58,32 @@ export default function Sidebar({ collapsed, mobileOpen }) {
 
       {/* Footer — user info + logout */}
       <div className="sidebar-footer">
+        {/* Theme toggle in sidebar */}
+        <button
+          onClick={toggle}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: collapsed ? '9px 0' : '9px 12px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            background: 'rgba(255,255,255,0.04)',
+            border: 'none',
+            borderRadius: 6,
+            color: theme === 'dark' ? '#fbbf24' : '#94a3b8',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 500,
+            marginBottom: 8,
+            transition: 'all 0.15s',
+          }}
+          title={theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
+        >
+          <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} style={{ fontSize: 16, flexShrink: 0 }} />
+          {!collapsed && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+        </button>
+
         <div className="sidebar-user">
           <div className="user-avatar">{user?.name?.[0]?.toUpperCase()}</div>
           {!collapsed && (

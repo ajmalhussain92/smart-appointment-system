@@ -117,30 +117,6 @@ export default function TopHeader({ title, subtitle, actions }) {
                 {/* Menu items */}
                 <div style={{ padding: '6px' }}>
                   <button
-                    onClick={() => { setDropOpen(false); navigate('/dashboard'); }}
-                    style={dropItemStyle}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                  >
-                    <i className="bi bi-grid-1x2-fill" style={{ color: 'var(--primary)' }} />
-                    Dashboard
-                  </button>
-
-                  {user.role === 'patient' && (
-                    <button
-                      onClick={() => { setDropOpen(false); navigate('/book'); }}
-                      style={dropItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                    >
-                      <i className="bi bi-calendar-plus-fill" style={{ color: '#7c3aed' }} />
-                      Book Appointment
-                    </button>
-                  )}
-
-                  <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }} />
-
-                  <button
                     onClick={handleLogout}
                     style={{ ...dropItemStyle, color: 'var(--danger)' }}
                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-light)'; }}

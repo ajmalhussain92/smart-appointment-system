@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import ForgotPassword from '../components/ForgotPassword';
 
 export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'patient', specialization: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
   const { login, register } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
@@ -191,6 +193,17 @@ export default function Login() {
               : isRegister ? 'Create Account' : 'Sign In'
             }
           </button>
+
+          {!isRegister && (
+            <div style={{ textAlign: 'right', marginTop: 10 }}>
+              <span
+                style={{ fontSize: 12, color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}
+                onClick={() => setShowForgot(true)}
+              >
+                Forgot password?
+              </span>
+            </div>
+          )}
         </form>
 
         <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'var(--text-muted)' }}>
@@ -200,6 +213,8 @@ export default function Login() {
             {isRegister ? 'Sign In' : 'Register'}
           </span>
         </p>
+
+        {showForgot && <ForgotPassword onClose={() => setShowForgot(false)} />}
 
         {!isRegister && (
           <div style={{

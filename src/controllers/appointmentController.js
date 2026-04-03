@@ -78,6 +78,7 @@ const updateStatus = async (req, res) => {
       { new: true }
     );
     if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+    req.app.get('io').to(appointment.doctor.toString()).emit('queue-updated');
     res.json(appointment);
   } catch (err) {
     res.status(500).json({ message: err.message });

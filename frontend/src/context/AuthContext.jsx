@@ -22,7 +22,8 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try { await authAPI.logout(); } catch (e) { /* ignore */ }
     localStorage.removeItem('user');
     setUser(null);
   };

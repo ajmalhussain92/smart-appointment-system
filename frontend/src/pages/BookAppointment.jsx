@@ -3,45 +3,58 @@ import { useNavigate } from 'react-router-dom';
 import { doctorAPI, appointmentAPI } from '../api/services';
 import DoctorList from '../components/DoctorList';
 import TimeSlotPicker from '../components/TimeSlotPicker';
+import Toast from '../components/Toast';
+
+const ALL_SLOTS = [
+  '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
+  '11:00 AM', '11:30 AM', '02:00 PM', '02:30 PM',
+  '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM',
+];
 
 export default function BookAppointment() {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [date, setDate] = useState('');
-  const [slots, setSlots] = useState(null);
   const [bookedSlots, setBookedSlots] = useState([]);
+  const [slotsLoaded, setSlotsLoaded] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    doctorAPI.getAll().then(({ data }) => setDoctors(data));
+    doctorAPI.getAll().then(({ data }) => setDoctors(data)).catch(console.error);
   }, []);
 
   useEffect(() => {
     if (!selectedDoctor || !date) return;
     setSelectedSlot('');
-    appointmentAPI.getSlots(selectedDoctor, date).then(({ data }) => {
-      setSlots(data.available);
-      setBookedSlots(data.booked);
-    });
+    setSlotsLoaded(false);
+    appointmentAPI.getSlots(selectedDoctor, date)
+      .then(({ data }) => {
+        setBookedSlots(data.booked);
+        setSlotsLoaded(true);
+      })
+      .catch(console.error);
   }, [selectedDoctor, date]);
+
+  const showToast = (message, type = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const handleBook = async () => {
     if (!selectedDoctor || !date || !selectedSlot) {
-      setError('Please select a doctor, date, and time slot.');
+      showToast('Please select a doctor, date, and time slot.');
       return;
     }
     setLoading(true);
-    setError('');
     try {
       await appointmentAPI.book({ doctorId: selectedDoctor, date, timeSlot: selectedSlot });
-      setSuccess('Appointment booked successfully!');
+      showToast('Appointment booked successfully!', 'success');
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Booking failed');
+      showToast(err.response?.data?.message || 'Booking failed');
     } finally {
       setLoading(false);
     }
@@ -53,12 +66,14 @@ export default function BookAppointment() {
     <div style={styles.container}>
       <h2 style={styles.title}>📅 Book an Appointment</h2>
 
-      {success && <div style={styles.success}>{success}</div>}
-      {error && <div style={styles.error}>{error}</div>}
+      {toast && <Toast message={toast.message} type={toast.type} />}
 
       <section style={styles.section}>
         <h3 style={styles.label}>1. Select a Doctor</h3>
-        <DoctorList doctors={doctors} selectedId={selectedDoctor} onSelect={setSelectedDoctor} />
+        {doctors.length === 0
+          ? <p style={styles.hint}>Loading doctors...</p>
+          : <DoctorList doctors={doctors} selectedId={selectedDoctor} onSelect={(id) => { setSelectedDoctor(id); setDate(''); setSlotsLoaded(false); }} />
+        }
       </section>
 
       {selectedDoctor && (
@@ -74,11 +89,11 @@ export default function BookAppointment() {
         </section>
       )}
 
-      {slots && (
+      {slotsLoaded && (
         <section style={styles.section}>
           <h3 style={styles.label}>3. Choose a Time Slot</h3>
           <TimeSlotPicker
-            slots={[...slots, ...bookedSlots]}
+            slots={ALL_SLOTS}
             bookedSlots={bookedSlots}
             selected={selectedSlot}
             onSelect={setSelectedSlot}
@@ -88,7 +103,7 @@ export default function BookAppointment() {
 
       {selectedSlot && (
         <button onClick={handleBook} style={styles.bookBtn} disabled={loading}>
-          {loading ? 'Booking...' : `Confirm Booking — ${selectedSlot}`}
+          {loading ? 'Booking...' : `✓ Confirm — ${selectedSlot} on ${date}`}
         </button>
       )}
     </div>
@@ -100,6 +115,7 @@ const styles = {
   title: { fontSize: 24, fontWeight: 700, color: '#1a1a2e', marginBottom: 28 },
   section: { marginBottom: 28 },
   label: { fontSize: 15, fontWeight: 700, color: '#444', marginBottom: 12 },
+  hint: { color: '#888', fontSize: 14 },
   dateInput: {
     padding: '10px 14px', border: '1.5px solid #e5e7eb',
     borderRadius: 8, fontSize: 14, outline: 'none',
@@ -108,13 +124,5 @@ const styles = {
     background: '#1a73e8', color: '#fff', border: 'none',
     padding: '14px 28px', borderRadius: 8, fontSize: 15,
     fontWeight: 600, cursor: 'pointer', marginTop: 8,
-  },
-  success: {
-    background: '#d1fae5', color: '#065f46', padding: '12px 16px',
-    borderRadius: 8, marginBottom: 20, fontWeight: 600,
-  },
-  error: {
-    background: '#fee2e2', color: '#dc2626', padding: '12px 16px',
-    borderRadius: 8, marginBottom: 20,
   },
 };

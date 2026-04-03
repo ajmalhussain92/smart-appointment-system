@@ -6,7 +6,7 @@ const STATUS_COLOR = {
   cancelled: '#ef4444',
 };
 
-export default function AppointmentCard({ appointment, role, onUpdate }) {
+export default function AppointmentCard({ appointment, role, onUpdate, onError }) {
   const { _id, doctor, patient, date, timeSlot, status, queuePosition } = appointment;
 
   const handleStatusChange = async (newStatus) => {
@@ -14,43 +14,47 @@ export default function AppointmentCard({ appointment, role, onUpdate }) {
       await appointmentAPI.updateStatus(_id, newStatus);
       onUpdate();
     } catch (err) {
-      alert(err.response?.data?.message || 'Error updating status');
+      onError?.(err.response?.data?.message || 'Error updating status');
     }
   };
 
   const handleCancel = async () => {
-    if (!confirm('Cancel this appointment?')) return;
+    if (!window.confirm('Cancel this appointment?')) return;
     try {
       await appointmentAPI.cancel(_id);
       onUpdate();
     } catch (err) {
-      alert(err.response?.data?.message || 'Error cancelling');
+      onError?.(err.response?.data?.message || 'Error cancelling');
     }
   };
 
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <span style={{ ...styles.badge, background: STATUS_COLOR[status] }}>
-          {status.toUpperCase()}
-        </span>
-        {status === 'waiting' && (
-          <span style={styles.queue}>Queue #{queuePosition}</span>
-        )}
+        <div style={styles.left}>
+          <span style={{ ...styles.badge, background: STATUS_COLOR[status] }}>
+            {status.toUpperCase()}
+          </span>
+          {status === 'waiting' && (
+            <span style={styles.queue}>Queue #{queuePosition}</span>
+          )}
+        </div>
+        <span style={styles.time}>🕐 {timeSlot}</span>
       </div>
-      <p style={styles.info}>
+
+      <p style={styles.name}>
         {role === 'patient' ? `Dr. ${doctor?.name}` : `Patient: ${patient?.name}`}
       </p>
       {role === 'patient' && doctor?.specialization && (
-        <p style={styles.sub}>{doctor.specialization}</p>
+        <p style={styles.spec}>{doctor.specialization}</p>
       )}
-      <p style={styles.info}>📅 {date} &nbsp; 🕐 {timeSlot}</p>
+      <p style={styles.date}>📅 {date}</p>
 
       {status === 'waiting' && (
         <div style={styles.actions}>
           {role === 'doctor' && (
             <button style={styles.completeBtn} onClick={() => handleStatusChange('completed')}>
-              ✓ Complete
+              ✓ Mark Complete
             </button>
           )}
           <button style={styles.cancelBtn} onClick={handleCancel}>
@@ -64,24 +68,28 @@ export default function AppointmentCard({ appointment, role, onUpdate }) {
 
 const styles = {
   card: {
-    background: '#fff', borderRadius: 10, padding: 16,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginBottom: 12,
+    background: '#fff', borderRadius: 10, padding: '16px 18px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 10,
+    borderLeft: '4px solid #1a73e8',
   },
-  header: { display: 'flex', justifyContent: 'space-between', marginBottom: 8 },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  left: { display: 'flex', alignItems: 'center', gap: 10 },
   badge: {
-    color: '#fff', fontSize: 11, fontWeight: 700,
-    padding: '3px 10px', borderRadius: 20,
+    color: '#fff', fontSize: 10, fontWeight: 700,
+    padding: '3px 10px', borderRadius: 20, letterSpacing: 0.5,
   },
-  queue: { fontSize: 13, fontWeight: 600, color: '#1a73e8' },
-  info: { margin: '4px 0', fontSize: 14, color: '#333' },
-  sub: { margin: '2px 0', fontSize: 12, color: '#888' },
-  actions: { display: 'flex', gap: 8, marginTop: 10 },
+  queue: { fontSize: 13, fontWeight: 700, color: '#1a73e8' },
+  time: { fontSize: 13, color: '#555' },
+  name: { fontWeight: 600, fontSize: 15, color: '#1a1a2e', margin: '4px 0' },
+  spec: { fontSize: 12, color: '#888', margin: '2px 0' },
+  date: { fontSize: 13, color: '#666', margin: '4px 0' },
+  actions: { display: 'flex', gap: 8, marginTop: 12 },
   completeBtn: {
     background: '#10b981', color: '#fff', border: 'none',
-    padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
+    padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13,
   },
   cancelBtn: {
-    background: '#ef4444', color: '#fff', border: 'none',
-    padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
+    background: '#fff', color: '#ef4444', border: '1.5px solid #ef4444',
+    padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13,
   },
 };

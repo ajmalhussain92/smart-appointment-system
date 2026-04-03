@@ -62,7 +62,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -276,12 +276,12 @@ button, input, select, textarea { font-family: inherit; }
   top: 0;
   z-index: 100;
   box-shadow: var(--shadow-sm);
-  transition: background 0.2s;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .header-left { display: flex; align-items: center; gap: 12px; }
-.header-page-title { font-size: 15px; font-weight: 700; color: var(--text); }
-.header-breadcrumb { font-size: 12px; color: var(--text-muted); }
+.header-page-title { font-size: 15px; font-weight: 700; color: var(--text); transition: color 0.3s; }
+.header-breadcrumb { font-size: 12px; color: var(--text-muted); transition: color 0.3s; }
 .header-right { display: flex; align-items: center; gap: 10px; }
 
 .theme-toggle {

@@ -9,9 +9,9 @@ export default function TopHeader({ title, subtitle, actions }) {
 
   const handleMenuClick = () => {
     if (window.innerWidth >= 992) {
-      toggleCollapse(); // desktop: collapse/expand
+      toggleCollapse();
     } else {
-      toggleMobile();   // mobile: open/close drawer
+      toggleMobile();
     }
   };
 

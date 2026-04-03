@@ -1,8 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSidebar } from '../App';
 
 export default function Sidebar({ collapsed, mobileOpen }) {
   const { user, logout } = useAuth();
+  const { toggleCollapse } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (p) => location.pathname === p;
@@ -43,7 +45,7 @@ export default function Sidebar({ collapsed, mobileOpen }) {
           <button
             key={i}
             className={`nav-item ${isActive(link.path) && i === 0 ? 'active' : ''}`}
-            onClick={() => navigate(link.path)}
+            onClick={() => { navigate(link.path); toggleCollapse(); }}
             title={collapsed ? link.label : ''}
           >
             <i className={`bi ${link.icon}`} />

@@ -112,12 +112,6 @@ export default function TopHeader({ title, subtitle, actions }) {
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user.email}</div>
                     </div>
                   </div>
-                  <div style={{ marginTop: 10 }}>
-                    <span className={`badge-status ${user.role === 'doctor' ? 'badge-doctor' : 'badge-patient'}`}>
-                      <i className={`bi ${user.role === 'doctor' ? 'bi-person-badge-fill' : 'bi-person-fill'}`} />
-                      {user.role === 'doctor' ? 'Doctor' : 'Patient'}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Menu items */}

@@ -46,7 +46,7 @@ export default function Login() {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '48px 40px',
+        padding: '48px 56px',
         position: 'relative',
         overflow: 'hidden',
         minWidth: 0,
@@ -62,47 +62,47 @@ export default function Login() {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 44 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
             <div style={{
-              width: 42, height: 42, background: '#3b82f6', borderRadius: 10,
+              width: 52, height: 52, background: '#3b82f6', borderRadius: 12,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(59,130,246,0.4)',
+              boxShadow: '0 4px 16px rgba(59,130,246,0.45)',
             }}>
-              <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 20 }} />
+              <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 26 }} />
             </div>
             <div>
-              <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>SmartDoc</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>Appointment Management System</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>SmartDoc</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Appointment Management System</div>
             </div>
           </div>
 
           {/* Heading */}
-          <h1 style={{ fontSize: 36, fontWeight: 900, color: '#fff', lineHeight: 1.15, marginBottom: 14, letterSpacing: -1.5 }}>
+          <h1 style={{ fontSize: 44, fontWeight: 900, color: '#fff', lineHeight: 1.12, marginBottom: 18, letterSpacing: -2 }}>
             Intelligent<br />
             <span style={{ color: '#60a5fa' }}>Healthcare</span><br />
             Scheduling
           </h1>
 
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 36 }}>
+          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 1.75, marginBottom: 44 }}>
             Optimize scheduling, reduce waiting time, and improve operational efficiency with real-time queue management.
           </p>
 
           {/* Features */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             {[
               { icon: 'bi-lightning-charge-fill', text: 'Real-time queue updates every 30 seconds' },
               { icon: 'bi-bar-chart-fill',        text: 'Doctor utilization & performance tracking' },
               { icon: 'bi-bell-fill',             text: 'Smart no-show detection & alerts' },
               { icon: 'bi-shield-check',          text: 'Role-based access for doctors & patients' },
             ].map(f => (
-              <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{
-                  width: 32, height: 32, background: 'rgba(59,130,246,0.2)',
-                  borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  width: 38, height: 38, background: 'rgba(59,130,246,0.2)',
+                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <i className={`bi ${f.icon}`} style={{ color: '#60a5fa', fontSize: 14 }} />
+                  <i className={`bi ${f.icon}`} style={{ color: '#60a5fa', fontSize: 17 }} />
                 </div>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>{f.text}</span>
+                <span style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.78)', fontWeight: 500 }}>{f.text}</span>
               </div>
             ))}
           </div>
@@ -111,12 +111,12 @@ export default function Login() {
 
       {/* ── Right Panel ── */}
       <div style={{
-        width: '420px',
+        width: '460px',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '40px 36px',
+        padding: '40px 44px',
         background: 'var(--surface)',
         borderLeft: '1px solid var(--border)',
         position: 'relative',

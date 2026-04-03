@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://10.56.237.173:5173', 'http://10.56.237.210:5173'],
+}));
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));

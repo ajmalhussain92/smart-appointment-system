@@ -93,7 +93,8 @@ export default function Login() {
 
       {/* Right — Form */}
       <div style={{
-        width: '100%', maxWidth: 480,
+        width: 440,
+        flexShrink: 0,
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         padding: '40px 48px', background: 'var(--surface)',
         borderLeft: '1px solid var(--border)',

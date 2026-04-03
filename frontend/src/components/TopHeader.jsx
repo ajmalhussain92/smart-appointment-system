@@ -5,24 +5,35 @@ import { useSidebar } from '../App';
 export default function TopHeader({ title, subtitle, actions }) {
   const { theme, toggle } = useTheme();
   const { user } = useAuth();
-  const { toggleSidebar } = useSidebar();
+  const { toggleCollapse, toggleMobile } = useSidebar();
+
+  const handleMenuClick = () => {
+    if (window.innerWidth >= 992) {
+      toggleCollapse(); // desktop: collapse/expand
+    } else {
+      toggleMobile();   // mobile: open/close drawer
+    }
+  };
 
   return (
     <header className="top-header">
       <div className="header-left">
-        {/* Hamburger — mobile only */}
+        {/* Single hamburger — collapse on desktop, drawer on mobile */}
         <button
-          className="d-lg-none"
-          onClick={toggleSidebar}
+          onClick={handleMenuClick}
           style={{
             background: 'none', border: 'none',
-            color: 'var(--text)', fontSize: 22,
-            cursor: 'pointer', padding: '4px 8px',
-            marginRight: 4,
+            color: 'var(--text-muted)', fontSize: 20,
+            cursor: 'pointer', padding: '6px 8px',
+            borderRadius: 6, lineHeight: 1,
+            display: 'flex', alignItems: 'center',
+            transition: 'background 0.15s',
           }}
+          title="Toggle sidebar"
         >
           <i className="bi bi-list" />
         </button>
+
         <div>
           <div className="header-page-title">{title}</div>
           {subtitle && <div className="header-breadcrumb">{subtitle}</div>}
@@ -33,7 +44,11 @@ export default function TopHeader({ title, subtitle, actions }) {
         {actions}
 
         {/* Theme toggle */}
-        <button className="theme-toggle" onClick={toggle} title="Toggle dark/light mode">
+        <button
+          className="theme-toggle"
+          onClick={toggle}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
           <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
         </button>
 

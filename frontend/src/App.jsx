@@ -9,7 +9,6 @@ import Dashboard from './pages/Dashboard';
 import BookAppointment from './pages/BookAppointment';
 import DoctorsPage from './pages/DoctorsPage';
 
-// Sidebar toggle context
 const SidebarContext = createContext();
 export const useSidebar = () => useContext(SidebarContext);
 
@@ -22,16 +21,19 @@ const PrivateRoute = ({ children, role }) => {
 
 function AppLayout() {
   const { user } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const toggleSidebar = () => setSidebarOpen(o => !o);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const toggleCollapse = () => setCollapsed(c => !c);
+  const toggleMobile = () => setMobileOpen(o => !o);
 
   return (
-    <SidebarContext.Provider value={{ toggleSidebar }}>
+    <SidebarContext.Provider value={{ collapsed, toggleCollapse, toggleMobile }}>
       <div className="app-wrapper">
         {/* Mobile overlay */}
-        {sidebarOpen && user && (
+        {mobileOpen && user && (
           <div
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => setMobileOpen(false)}
             style={{
               position: 'fixed', inset: 0,
               background: 'rgba(0,0,0,0.5)',
@@ -41,9 +43,12 @@ function AppLayout() {
           />
         )}
 
-        {user && <Sidebar open={sidebarOpen} />}
+        {user && <Sidebar collapsed={collapsed} mobileOpen={mobileOpen} />}
 
-        <div className={user ? 'main-area' : ''} style={{ flex: 1 }}>
+        <div
+          className={user ? `main-area${collapsed ? ' collapsed' : ''}` : ''}
+          style={{ flex: 1 }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />

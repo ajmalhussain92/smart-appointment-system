@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function Sidebar({ open }) {
+export default function Sidebar({ collapsed, mobileOpen }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -13,61 +13,71 @@ export default function Sidebar({ open }) {
   ];
 
   const patientLinks = [
-    { path: '/dashboard', icon: 'bi-grid-1x2-fill',       label: 'Dashboard' },
-    { path: '/book',      icon: 'bi-calendar-plus-fill',   label: 'Book Appointment' },
-    { path: '/doctors',   icon: 'bi-person-badge-fill',    label: 'Find Doctors' },
+    { path: '/dashboard', icon: 'bi-grid-1x2-fill',      label: 'Dashboard' },
+    { path: '/book',      icon: 'bi-calendar-plus-fill',  label: 'Book Appointment' },
+    { path: '/doctors',   icon: 'bi-person-badge-fill',   label: 'Find Doctors' },
   ];
 
   const links = user?.role === 'doctor' ? doctorLinks : patientLinks;
 
-  const handleNav = (path) => navigate(path);
-
   return (
-    <aside className={`sidebar ${open ? 'open' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'open' : ''}`}>
 
       {/* Brand */}
       <div className="sidebar-brand">
         <div className="sidebar-brand-icon">
-          <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 18 }} />
+          <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 16 }} />
         </div>
-        <div>
-          <div className="sidebar-brand-name">SmartDoc</div>
-          <div className="sidebar-brand-sub">Appointment System</div>
-        </div>
+        {!collapsed && (
+          <div>
+            <div className="sidebar-brand-name">SmartDoc</div>
+            <div className="sidebar-brand-sub">Appointment System</div>
+          </div>
+        )}
       </div>
 
       {/* Nav */}
       <nav className="sidebar-nav">
-        <div className="nav-section-label">Main Menu</div>
+        {!collapsed && <div className="nav-section-label">Main Menu</div>}
         {links.map((link, i) => (
           <button
             key={i}
-            className={`nav-item ${isActive(link.path) && i === 0 ? 'active' : isActive(link.path) && i > 0 ? '' : isActive(link.path) ? 'active' : ''}`}
-            style={isActive(link.path) && link.label !== 'Patient Queue' ? {} : {}}
-            onClick={() => handleNav(link.path)}
+            className={`nav-item ${isActive(link.path) && i === 0 ? 'active' : ''}`}
+            onClick={() => navigate(link.path)}
+            title={collapsed ? link.label : ''}
           >
             <i className={`bi ${link.icon}`} />
-            {link.label}
+            {!collapsed && <span className="nav-label">{link.label}</span>}
           </button>
         ))}
-
-        <div className="nav-section-label" style={{ marginTop: 16 }}>Account</div>
-        <button className="nav-item" onClick={() => { logout(); navigate('/login'); }}>
-          <i className="bi bi-box-arrow-right" />
-          Logout
-        </button>
       </nav>
 
-      {/* User footer */}
+      {/* Footer — user info + logout */}
       <div className="sidebar-footer">
         <div className="sidebar-user">
           <div className="user-avatar">{user?.name?.[0]?.toUpperCase()}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="user-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {user?.name}
+          {!collapsed && (
+            <div className="sidebar-user-info" style={{ flex: 1, minWidth: 0 }}>
+              <div className="user-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.name}
+              </div>
+              <div className="user-role" style={{ overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 11, color: 'var(--sidebar-text)' }}>
+                {user?.role}
+              </div>
             </div>
-            <div className="user-role">{user?.email}</div>
-          </div>
+          )}
+          <button
+            onClick={() => { logout(); navigate('/login'); }}
+            title="Logout"
+            style={{
+              background: 'none', border: 'none',
+              color: '#6b7280', cursor: 'pointer',
+              padding: 4, fontSize: 17, flexShrink: 0,
+              display: 'flex', alignItems: 'center',
+            }}
+          >
+            <i className="bi bi-box-arrow-right" />
+          </button>
         </div>
       </div>
     </aside>

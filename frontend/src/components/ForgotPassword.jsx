@@ -1,17 +1,24 @@
 import { useState } from 'react';
+import { authAPI } from '../api/services';
 
 export default function ForgotPassword({ onClose }) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call — backend will implement actual email
-    await new Promise(r => setTimeout(r, 1200));
-    setSent(true);
-    setLoading(false);
+    setError('');
+    try {
+      await authAPI.forgotPassword(email);
+      setSent(true);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send reset link. Try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,6 +97,11 @@ export default function ForgotPassword({ onClose }) {
                 autoFocus
               />
             </div>
+            {error && (
+              <div className="alert alert-danger py-2 mb-3" style={{ fontSize: 12 }}>
+                <i className="bi bi-exclamation-triangle-fill me-2" />{error}
+              </div>
+            )}
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
               <i className="bi bi-info-circle me-1" />
               We'll send a password reset link to this email address.

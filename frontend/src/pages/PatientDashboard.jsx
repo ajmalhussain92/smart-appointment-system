@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { appointmentAPI } from '../api/services';
 import TopHeader from '../components/TopHeader';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const STATUS_BADGE = {
   waiting:   <span className="badge-status badge-waiting">Waiting</span>,
@@ -288,6 +289,35 @@ export default function PatientDashboard() {
                       <i className="bi bi-chevron-right ms-auto" style={{ fontSize: 12, color: 'var(--text-light)' }} />
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Appointment Status Chart */}
+              <div className="card scale-in" style={{ animationDelay: '0.12s' }}>
+                <div className="card-header">
+                  <div className="card-title-text">
+                    <i className="bi bi-bar-chart-fill me-2" style={{ color: 'var(--primary)' }} />
+                    My Stats
+                  </div>
+                </div>
+                <div className="card-body">
+                  <ResponsiveContainer width="100%" height={140}>
+                    <BarChart data={[
+                      { name: 'Waiting',   value: waiting.length,   fill: '#3b82f6' },
+                      { name: 'Done',      value: completed.length, fill: '#12b76a' },
+                      { name: 'Cancelled', value: cancelled.length, fill: '#f04438' },
+                    ]} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" radius={[4,4,0,0]} maxBarSize={36}>
+                        {[waiting.length, completed.length, cancelled.length].map((_, i) => (
+                          <Cell key={i} fill={['#3b82f6','#12b76a','#f04438'][i]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 

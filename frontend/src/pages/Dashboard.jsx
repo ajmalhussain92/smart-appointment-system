@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { appointmentAPI, doctorAPI } from '../api/services';
@@ -6,6 +6,10 @@ import AppointmentCard from '../components/AppointmentCard';
 import StatsCard from '../components/StatsCard';
 import Spinner from '../components/Spinner';
 import Toast from '../components/Toast';
+import NotificationBanner from '../components/NotificationBanner';
+import DoctorUtilization from '../components/DoctorUtilization';
+
+const REFRESH_INTERVAL = 30000; // auto-refresh every 30 seconds
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -13,24 +17,35 @@ export default function Dashboard() {
   const [isAvailable, setIsAvailable] = useState(user?.isAvailable ?? true);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
 
   const showToast = (message, type = 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async (silent = false) => {
     try {
       const { data } = await appointmentAPI.getMy();
       setAppointments(data);
+      setLastRefresh(new Date());
+      if (!silent) setLoading(false);
     } catch {
-      showToast('Failed to load appointments');
-    } finally {
-      setLoading(false);
+      if (!silent) {
+        showToast('Failed to load appointments');
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchAppointments(); }, []);
+  // Initial load
+  useEffect(() => { fetchAppointments(); }, [fetchAppointments]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const interval = setInterval(() => fetchAppointments(true), REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, [fetchAppointments]);
 
   const handleToggleAvailability = async () => {
     try {
@@ -47,8 +62,7 @@ export default function Dashboard() {
 
   const waiting = appointments.filter((a) => a.status === 'waiting');
   const completed = appointments.filter((a) => a.status === 'completed');
-  const cancelled = appointments.filter((a) => a.status === 'cancelled');
-
+  const cancelled = appointments.filter((a) => a.status !== 'waiting' && a.status !== 'completed');
   const isDoctor = user?.role === 'doctor';
 
   return (
@@ -59,7 +73,12 @@ export default function Dashboard() {
           <h2 style={styles.title}>
             {isDoctor ? '🩺 Doctor Dashboard' : '👤 My Appointments'}
           </h2>
-          <p style={styles.sub}>Welcome back, {user?.name}</p>
+          <p style={styles.sub}>
+            Welcome back, {user?.name} &nbsp;·&nbsp;
+            <span style={styles.refresh}>
+              Last updated: {lastRefresh.toLocaleTimeString()}
+            </span>
+          </p>
         </div>
         <div style={styles.headerActions}>
           {isDoctor && (
@@ -78,6 +97,9 @@ export default function Dashboard() {
 
       {toast && <Toast message={toast.message} type={toast.type} />}
 
+      {/* Notifications */}
+      <NotificationBanner appointments={appointments} />
+
       {/* Stats */}
       <div style={styles.statsRow}>
         <StatsCard icon="⏳" label="Waiting" value={waiting.length} color="#f59e0b" />
@@ -86,6 +108,9 @@ export default function Dashboard() {
         <StatsCard icon="📋" label="Total" value={appointments.length} color="#1a73e8" />
       </div>
 
+      {/* Doctor utilization */}
+      {isDoctor && <DoctorUtilization appointments={appointments} />}
+
       {/* Appointments */}
       {loading ? (
         <Spinner text="Loading appointments..." />
@@ -93,19 +118,24 @@ export default function Dashboard() {
         <div style={styles.empty}>
           <p style={styles.emptyIcon}>📭</p>
           <p>No appointments yet.</p>
-          {!isDoctor && <Link to="/book" style={styles.emptyLink}>Book your first appointment →</Link>}
+          {!isDoctor && (
+            <Link to="/book" style={styles.emptyLink}>Book your first appointment →</Link>
+          )}
         </div>
       ) : (
         <>
           {waiting.length > 0 && (
             <section style={styles.section}>
-              <h3 style={styles.sectionTitle}>⏳ Queue — Waiting ({waiting.length})</h3>
+              <h3 style={styles.sectionTitle}>
+                ⏳ Queue — Waiting ({waiting.length})
+                <span style={styles.liveTag}>● LIVE</span>
+              </h3>
               {waiting.map((a) => (
                 <AppointmentCard
                   key={a._id}
                   appointment={a}
                   role={user.role}
-                  onUpdate={fetchAppointments}
+                  onUpdate={() => fetchAppointments(true)}
                   onError={(msg) => showToast(msg)}
                 />
               ))}
@@ -115,15 +145,17 @@ export default function Dashboard() {
             <section style={styles.section}>
               <h3 style={styles.sectionTitle}>✅ Completed ({completed.length})</h3>
               {completed.map((a) => (
-                <AppointmentCard key={a._id} appointment={a} role={user.role} onUpdate={fetchAppointments} onError={(msg) => showToast(msg)} />
+                <AppointmentCard key={a._id} appointment={a} role={user.role}
+                  onUpdate={() => fetchAppointments(true)} onError={(msg) => showToast(msg)} />
               ))}
             </section>
           )}
           {cancelled.length > 0 && (
             <section style={styles.section}>
-              <h3 style={styles.sectionTitle}>✕ Cancelled ({cancelled.length})</h3>
+              <h3 style={styles.sectionTitle}>✕ Cancelled / No-Show ({cancelled.length})</h3>
               {cancelled.map((a) => (
-                <AppointmentCard key={a._id} appointment={a} role={user.role} onUpdate={fetchAppointments} onError={(msg) => showToast(msg)} />
+                <AppointmentCard key={a._id} appointment={a} role={user.role}
+                  onUpdate={() => fetchAppointments(true)} onError={(msg) => showToast(msg)} />
               ))}
             </section>
           )}
@@ -138,6 +170,7 @@ const styles = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
   title: { fontSize: 24, fontWeight: 700, color: '#1a1a2e', margin: 0 },
   sub: { color: '#666', marginTop: 4, fontSize: 14 },
+  refresh: { fontSize: 12, color: '#aaa' },
   headerActions: { display: 'flex', gap: 10, alignItems: 'center' },
   toggleBtn: {
     color: '#fff', border: 'none', padding: '10px 18px',
@@ -147,9 +180,15 @@ const styles = {
     background: '#1a73e8', color: '#fff', padding: '10px 18px',
     borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 14,
   },
-  statsRow: { display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' },
+  statsRow: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 15, fontWeight: 700, color: '#444', marginBottom: 12 },
+  sectionTitle: {
+    fontSize: 15, fontWeight: 700, color: '#444',
+    marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10,
+  },
+  liveTag: {
+    fontSize: 11, color: '#10b981', fontWeight: 700, letterSpacing: 1,
+  },
   empty: { textAlign: 'center', color: '#888', paddingTop: 60 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
   emptyLink: { display: 'inline-block', marginTop: 12, color: '#1a73e8', fontWeight: 600 },

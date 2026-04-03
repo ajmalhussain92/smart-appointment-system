@@ -12,9 +12,13 @@ export const appointmentAPI = {
   getMy: () => api.get('/appointments/my'),
   updateStatus: (id, status) => api.patch(`/appointments/${id}/status`, { status }),
   cancel: (id) => api.patch(`/appointments/${id}/cancel`),
+  getWaitingTime: (doctorId, date) =>
+    api.get('/appointments/waiting-time', { params: { doctorId, date } }),
+  markNoShow: (id) => api.patch(`/appointments/${id}/no-show`),
 };
 
 export const doctorAPI = {
   getAll: () => api.get('/doctors'),
   toggleAvailability: () => api.patch('/doctors/availability'),
+  getStats: () => api.get('/doctors/stats'),
 };

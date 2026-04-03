@@ -1,9 +1,11 @@
 import { appointmentAPI } from '../api/services';
+import WaitingTimeBadge from './WaitingTimeBadge';
 
 const STATUS_COLOR = {
   waiting: '#f59e0b',
   completed: '#10b981',
   cancelled: '#ef4444',
+  'no-show': '#6b7280',
 };
 
 export default function AppointmentCard({ appointment, role, onUpdate, onError }) {
@@ -28,11 +30,23 @@ export default function AppointmentCard({ appointment, role, onUpdate, onError }
     }
   };
 
+  const handleNoShow = async () => {
+    if (!window.confirm('Mark this patient as no-show?')) return;
+    try {
+      await appointmentAPI.markNoShow(_id);
+      onUpdate();
+    } catch (err) {
+      // fallback — mark as cancelled if no-show endpoint not ready yet
+      await appointmentAPI.updateStatus(_id, 'cancelled');
+      onUpdate();
+    }
+  };
+
   return (
     <div style={styles.card}>
       <div style={styles.header}>
         <div style={styles.left}>
-          <span style={{ ...styles.badge, background: STATUS_COLOR[status] }}>
+          <span style={{ ...styles.badge, background: STATUS_COLOR[status] || '#6b7280' }}>
             {status.toUpperCase()}
           </span>
           {status === 'waiting' && (
@@ -50,12 +64,22 @@ export default function AppointmentCard({ appointment, role, onUpdate, onError }
       )}
       <p style={styles.date}>📅 {date}</p>
 
+      {/* Waiting time estimate for patient */}
+      {role === 'patient' && status === 'waiting' && (
+        <WaitingTimeBadge queuePosition={queuePosition} />
+      )}
+
       {status === 'waiting' && (
         <div style={styles.actions}>
           {role === 'doctor' && (
-            <button style={styles.completeBtn} onClick={() => handleStatusChange('completed')}>
-              ✓ Mark Complete
-            </button>
+            <>
+              <button style={styles.completeBtn} onClick={() => handleStatusChange('completed')}>
+                ✓ Complete
+              </button>
+              <button style={styles.noshowBtn} onClick={handleNoShow}>
+                👻 No-Show
+              </button>
+            </>
           )}
           <button style={styles.cancelBtn} onClick={handleCancel}>
             ✕ Cancel
@@ -83,9 +107,13 @@ const styles = {
   name: { fontWeight: 600, fontSize: 15, color: '#1a1a2e', margin: '4px 0' },
   spec: { fontSize: 12, color: '#888', margin: '2px 0' },
   date: { fontSize: 13, color: '#666', margin: '4px 0' },
-  actions: { display: 'flex', gap: 8, marginTop: 12 },
+  actions: { display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' },
   completeBtn: {
     background: '#10b981', color: '#fff', border: 'none',
+    padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13,
+  },
+  noshowBtn: {
+    background: '#6b7280', color: '#fff', border: 'none',
     padding: '7px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13,
   },
   cancelBtn: {

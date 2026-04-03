@@ -18,93 +18,88 @@ export default function Login() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setError(''); setLoading(true);
     try {
       if (isRegister) await register(form);
       else await login(form.email, form.password);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong. Try again.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
     <div style={{
-      minHeight: '100vh',
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'row',
+      position: 'fixed', inset: 0,
+      display: 'flex', flexDirection: 'row',
       background: 'var(--bg)',
-      overflow: 'hidden',
     }}>
 
       {/* ── Left Panel ── */}
       <div style={{
         flex: 1,
-        background: 'linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #1d4ed8 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '40px 40px',
-        position: 'relative',
-        overflow: 'hidden',
-        minWidth: 0,
-      }}
-        className="d-none d-lg-flex"
-      >
+        background: 'linear-gradient(145deg, #0f172a 0%, #1e3a5f 60%, #1d4ed8 100%)',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        padding: '40px', position: 'relative', overflow: 'hidden',
+      }} className="d-none d-lg-flex">
+
         {/* Dot pattern */}
         <div style={{
-          position: 'absolute', inset: 0, opacity: 0.04,
+          position: 'absolute', inset: 0, opacity: 0.05,
           backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '32px 32px',
+          backgroundSize: '28px 28px',
         }} />
 
-        <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+        {/* Glow */}
+        <div style={{
+          position: 'absolute', width: 400, height: 400, borderRadius: '50%',
+          background: 'rgba(59,130,246,0.15)', filter: 'blur(80px)',
+          top: '20%', left: '30%', pointerEvents: 'none',
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
             <div style={{
-              width: 52, height: 52, background: '#3b82f6', borderRadius: 12,
+              width: 48, height: 48, background: '#3b82f6', borderRadius: 12,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(59,130,246,0.45)',
+              boxShadow: '0 4px 20px rgba(59,130,246,0.5)',
             }}>
-              <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 26 }} />
+              <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 22 }} />
             </div>
             <div>
               <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>SmartDoc</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Appointment Management System</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Appointment Management System</div>
             </div>
           </div>
 
           {/* Heading */}
-          <h1 style={{ fontSize: 44, fontWeight: 900, color: '#fff', lineHeight: 1.12, marginBottom: 18, letterSpacing: -2 }}>
+          <h1 style={{ fontSize: 42, fontWeight: 900, color: '#fff', lineHeight: 1.1, marginBottom: 16, letterSpacing: -2 }}>
             Intelligent<br />
             <span style={{ color: '#60a5fa' }}>Healthcare</span><br />
             Scheduling
           </h1>
 
-          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 1.75, marginBottom: 44 }}>
+          <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.75, marginBottom: 40, maxWidth: 380 }}>
             Optimize scheduling, reduce waiting time, and improve operational efficiency with real-time queue management.
           </p>
 
           {/* Features */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[
               { icon: 'bi-lightning-charge-fill', text: 'Real-time queue updates every 30 seconds' },
               { icon: 'bi-bar-chart-fill',        text: 'Doctor utilization & performance tracking' },
               { icon: 'bi-bell-fill',             text: 'Smart no-show detection & alerts' },
               { icon: 'bi-shield-check',          text: 'Role-based access for doctors & patients' },
             ].map(f => (
-              <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
-                  width: 38, height: 38, background: 'rgba(59,130,246,0.2)',
-                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  width: 36, height: 36, background: 'rgba(59,130,246,0.2)',
+                  borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <i className={`bi ${f.icon}`} style={{ color: '#60a5fa', fontSize: 17 }} />
+                  <i className={`bi ${f.icon}`} style={{ color: '#60a5fa', fontSize: 15 }} />
                 </div>
-                <span style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.78)', fontWeight: 500 }}>{f.text}</span>
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>{f.text}</span>
               </div>
             ))}
           </div>
@@ -113,16 +108,14 @@ export default function Login() {
 
       {/* ── Right Panel ── */}
       <div style={{
-        width: '500px',
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '40px 44px',
+        width: '42%',
+        minWidth: 360,
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        padding: '40px 48px',
         background: 'var(--surface)',
         borderLeft: '1px solid var(--border)',
-        position: 'relative',
         overflowY: 'auto',
+        position: 'relative',
       }}>
 
         {/* Theme toggle */}
@@ -134,7 +127,7 @@ export default function Login() {
         </div>
 
         <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.5, marginBottom: 5 }}>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.5, marginBottom: 5 }}>
             {isRegister ? 'Create Account' : 'Welcome Back'}
           </h2>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
@@ -187,7 +180,7 @@ export default function Login() {
           </div>
 
           <button type="submit" className="btn btn-primary w-100 mt-1"
-            style={{ padding: '10px', fontSize: 14 }} disabled={loading}>
+            style={{ padding: '11px', fontSize: 14 }} disabled={loading}>
             {loading
               ? <><span className="spinner-border spinner-border-sm me-2" />Please wait...</>
               : isRegister ? 'Create Account' : 'Sign In'
@@ -196,25 +189,21 @@ export default function Login() {
 
           {!isRegister && (
             <div style={{ textAlign: 'right', marginTop: 10 }}>
-              <span
-                style={{ fontSize: 12, color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}
-                onClick={() => setShowForgot(true)}
-              >
+              <span style={{ fontSize: 12, color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}
+                onClick={() => setShowForgot(true)}>
                 Forgot password?
               </span>
             </div>
           )}
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'var(--text-muted)' }}>
+        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--text-muted)' }}>
           {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
           <span style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}
             onClick={() => { setIsRegister(!isRegister); setError(''); }}>
             {isRegister ? 'Sign In' : 'Register'}
           </span>
         </p>
-
-        {showForgot && <ForgotPassword onClose={() => setShowForgot(false)} />}
 
         {!isRegister && (
           <div style={{
@@ -241,6 +230,8 @@ export default function Login() {
             </div>
           </div>
         )}
+
+        {showForgot && <ForgotPassword onClose={() => setShowForgot(false)} />}
       </div>
     </div>
   );

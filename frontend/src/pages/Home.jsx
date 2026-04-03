@@ -41,7 +41,7 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <div style={{ padding: '48px 24px 40px', textAlign: 'center' }}>
+      <div style={{ padding: '32px 24px 28px', textAlign: 'center' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           background: 'rgba(59,130,246,0.1)', color: '#3b82f6',
@@ -103,7 +103,7 @@ export default function Home() {
             { icon: 'bi-moon-stars-fill',       color: '#6366f1', title: 'Dark / Light Mode',  desc: 'Full dark and light theme support with instant toggle and persistent preference.' },
           ].map((f, i) => (
             <div className="col-12 col-md-4" key={f.title} style={{
-              padding: '24px',
+              padding: '16px',
               background: 'var(--surface)',
               borderRight: i % 3 !== 2 ? '1px solid var(--border)' : 'none',
               borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
@@ -119,7 +119,7 @@ export default function Home() {
       </div>
 
       {/* CTA */}
-      <div style={{ textAlign: 'center', padding: '40px 24px', background: 'var(--surface)' }}>
+      <div style={{ textAlign: 'center', padding: '28px 24px', background: 'var(--surface)' }}>
         <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', marginBottom: 10, letterSpacing: -0.5 }}>
           Ready to get started?
         </h2>

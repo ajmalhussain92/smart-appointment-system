@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doctorAPI, appointmentAPI } from '../api/services';
 import TopHeader from '../components/TopHeader';
-import Spinner from '../components/Spinner';
 
 const ALL_SLOTS = [
   '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
@@ -10,7 +9,7 @@ const ALL_SLOTS = [
   '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM',
 ];
 
-export default function BookAppointment() {
+export default function BookAppointment({ onMenuToggle }) {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [date, setDate] = useState('');
@@ -21,107 +20,147 @@ export default function BookAppointment() {
   const [doctorsLoading, setDoctorsLoading] = useState(true);
   const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    doctorAPI.getAll()
-      .then(({ data }) => setDoctors(data))
-      .finally(() => setDoctorsLoading(false));
+    doctorAPI.getAll().then(({ data }) => setDoctors(data)).finally(() => setDoctorsLoading(false));
   }, []);
 
   useEffect(() => {
     if (!selectedDoctor || !date) return;
-    setSelectedSlot('');
-    setSlotsLoaded(false);
+    setSelectedSlot(''); setSlotsLoaded(false);
     appointmentAPI.getSlots(selectedDoctor._id, date)
       .then(({ data }) => { setBookedSlots(data.booked); setSlotsLoaded(true); });
   }, [selectedDoctor, date]);
 
-  const showAlert = (message, type = 'error') => {
-    setAlert({ message, type });
+  const showAlert = (msg, type = 'danger') => {
+    setAlert({ msg, type });
     setTimeout(() => setAlert(null), 4000);
   };
 
   const handleBook = async () => {
-    if (!selectedDoctor || !date || !selectedSlot) {
-      showAlert('Please complete all steps before confirming.', 'warning');
-      return;
-    }
+    if (!selectedDoctor || !date || !selectedSlot) return showAlert('Please complete all steps.', 'warning');
     setLoading(true);
     try {
       await appointmentAPI.book({ doctorId: selectedDoctor._id, date, timeSlot: selectedSlot });
       showAlert('Appointment booked successfully!', 'success');
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err) {
-      showAlert(err.response?.data?.message || 'Booking failed. Try again.');
-    } finally {
-      setLoading(false);
-    }
+      showAlert(err.response?.data?.message || 'Booking failed.');
+    } finally { setLoading(false); }
   };
 
-  const today = new Date().toISOString().split('T')[0];
-  const availableSlots = ALL_SLOTS.filter(s => !bookedSlots.includes(s));
+  const step = !selectedDoctor ? 1 : !date ? 2 : !slotsLoaded ? 2 : !selectedSlot ? 3 : 4;
 
   return (
     <div>
-      <TopHeader title="Book Appointment" subtitle="Schedule a new appointment with a doctor" />
+      <TopHeader
+        title="Book Appointment"
+        subtitle="Home / Book Appointment"
+        onMenuToggle={onMenuToggle}
+      />
 
-      <div className="page-body">
+      <div className="page-content">
         {alert && (
-          <div className={`alert alert-${alert.type} animate-fade`}>
-            {alert.message}
+          <div className={`alert alert-${alert.type} fade-in`} role="alert">
+            <i className={`bi bi-${alert.type === 'success' ? 'check-circle' : alert.type === 'warning' ? 'exclamation-triangle' : 'x-circle'}-fill me-2`} />
+            {alert.msg}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, alignItems: 'start' }}>
+        {/* Progress Steps */}
+        <div className="card mb-4">
+          <div className="card-body py-3">
+            <div className="d-flex align-items-center gap-0">
+              {['Select Doctor', 'Pick Date', 'Choose Slot', 'Confirm'].map((s, i) => (
+                <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < 3 ? 1 : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: '50%',
+                      background: step > i + 1 ? '#10b981' : step === i + 1 ? '#3b82f6' : 'var(--border)',
+                      color: step >= i + 1 ? '#fff' : 'var(--text-muted)',
+                      fontSize: 12, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s',
+                    }}>
+                      {step > i + 1 ? <i className="bi bi-check-lg" /> : i + 1}
+                    </div>
+                    <span style={{
+                      fontSize: 12, fontWeight: 600,
+                      color: step >= i + 1 ? 'var(--text)' : 'var(--text-muted)',
+                    }}>{s}</span>
+                  </div>
+                  {i < 3 && (
+                    <div style={{
+                      flex: 1, height: 2, margin: '0 12px',
+                      background: step > i + 1 ? '#10b981' : 'var(--border)',
+                      transition: 'background 0.3s',
+                    }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-          {/* Left — Steps */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="row g-4 book-grid">
+          {/* Left */}
+          <div className="col-lg-8">
 
             {/* Step 1 — Doctor */}
-            <div className="card">
-              <div className="card-header">
+            <div className="card mb-4 fade-in">
+              <div className="card-header d-flex align-items-center justify-content-between">
                 <div>
-                  <div className="card-title">Step 1 — Select Doctor</div>
-                  <div className="card-subtitle">Choose an available doctor</div>
+                  <div className="card-title-text">
+                    <span style={{ color: 'var(--primary)', marginRight: 8 }}>01</span>
+                    Select a Doctor
+                  </div>
+                  <div className="card-subtitle-text">Choose from available doctors</div>
                 </div>
-                {selectedDoctor && (
-                  <span className="badge badge-available">✓ Selected</span>
-                )}
+                {selectedDoctor && <span className="badge-status badge-available"><i className="bi bi-check-lg" /> Selected</span>}
               </div>
               <div className="card-body">
-                {doctorsLoading ? <Spinner text="Loading doctors..." /> : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                {doctorsLoading ? (
+                  <div className="d-flex justify-content-center py-4">
+                    <div className="spinner-border text-primary" style={{ width: 28, height: 28, borderWidth: 3 }} />
+                  </div>
+                ) : (
+                  <div className="row g-3">
                     {doctors.map(doc => (
-                      <div
-                        key={doc._id}
-                        onClick={() => doc.isAvailable && setSelectedDoctor(doc)}
-                        style={{
-                          padding: '14px',
-                          borderRadius: 8,
-                          border: `2px solid ${selectedDoctor?._id === doc._id ? '#2563eb' : '#e5e7eb'}`,
-                          background: selectedDoctor?._id === doc._id ? '#eff6ff' : '#fff',
-                          cursor: doc.isAvailable ? 'pointer' : 'not-allowed',
-                          opacity: doc.isAvailable ? 1 : 0.5,
-                          transition: 'all 0.15s',
-                          textAlign: 'center',
-                        }}
-                      >
-                        <div style={{
-                          width: 44, height: 44, borderRadius: '50%',
-                          background: selectedDoctor?._id === doc._id ? '#2563eb' : '#e5e7eb',
-                          color: selectedDoctor?._id === doc._id ? '#fff' : '#374151',
-                          fontSize: 18, fontWeight: 700,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          margin: '0 auto 8px',
-                        }}>
-                          {doc.name[0]}
-                        </div>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>Dr. {doc.name}</div>
-                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{doc.specialization || 'General'}</div>
-                        <div style={{ marginTop: 6 }}>
-                          <span className={`badge ${doc.isAvailable ? 'badge-available' : 'badge-unavailable'}`}
-                            style={{ fontSize: 10 }}>
-                            {doc.isAvailable ? '● Available' : '● Unavailable'}
+                      <div className="col-6 col-md-4" key={doc._id}>
+                        <div
+                          onClick={() => doc.isAvailable && setSelectedDoctor(doc)}
+                          style={{
+                            padding: '16px 14px',
+                            borderRadius: 8,
+                            border: `2px solid ${selectedDoctor?._id === doc._id ? '#3b82f6' : 'var(--border)'}`,
+                            background: selectedDoctor?._id === doc._id ? 'rgba(59,130,246,0.06)' : 'var(--surface)',
+                            cursor: doc.isAvailable ? 'pointer' : 'not-allowed',
+                            opacity: doc.isAvailable ? 1 : 0.5,
+                            transition: 'all 0.15s',
+                            textAlign: 'center',
+                          }}
+                        >
+                          <div style={{
+                            width: 44, height: 44, borderRadius: '50%',
+                            background: selectedDoctor?._id === doc._id ? '#3b82f6' : 'var(--surface-2)',
+                            color: selectedDoctor?._id === doc._id ? '#fff' : 'var(--primary)',
+                            fontSize: 17, fontWeight: 700,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 10px',
+                            border: '2px solid var(--border)',
+                          }}>
+                            {doc.name[0]}
+                          </div>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', marginBottom: 3 }}>
+                            Dr. {doc.name}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                            {doc.specialization || 'General'}
+                          </div>
+                          <span className={`badge-status ${doc.isAvailable ? 'badge-available' : 'badge-busy'}`} style={{ fontSize: 10 }}>
+                            <i className={`bi bi-circle-fill`} style={{ fontSize: 6 }} />
+                            {doc.isAvailable ? ' Available' : ' Unavailable'}
                           </span>
                         </div>
                       </div>
@@ -133,19 +172,19 @@ export default function BookAppointment() {
 
             {/* Step 2 — Date */}
             {selectedDoctor && (
-              <div className="card animate-fade">
+              <div className="card mb-4 fade-in">
                 <div className="card-header">
-                  <div>
-                    <div className="card-title">Step 2 — Select Date</div>
-                    <div className="card-subtitle">Pick an appointment date</div>
+                  <div className="card-title-text">
+                    <span style={{ color: 'var(--primary)', marginRight: 8 }}>02</span>
+                    Select Date
                   </div>
-                  {date && <span className="badge badge-available">✓ {date}</span>}
+                  <div className="card-subtitle-text">Pick your preferred appointment date</div>
                 </div>
                 <div className="card-body">
-                  <div className="form-group" style={{ marginBottom: 0 }}>
+                  <div style={{ maxWidth: 260 }}>
                     <label className="form-label">Appointment Date</label>
-                    <input type="date" className="form-input" min={today} value={date}
-                      onChange={e => setDate(e.target.value)} style={{ maxWidth: 240 }} />
+                    <input type="date" className="form-control" min={today} value={date}
+                      onChange={e => setDate(e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -153,18 +192,22 @@ export default function BookAppointment() {
 
             {/* Step 3 — Slots */}
             {slotsLoaded && (
-              <div className="card animate-fade">
-                <div className="card-header">
+              <div className="card fade-in">
+                <div className="card-header d-flex align-items-center justify-content-between">
                   <div>
-                    <div className="card-title">Step 3 — Choose Time Slot</div>
-                    <div className="card-subtitle">
-                      {availableSlots.length} slots available · {bookedSlots.length} booked
+                    <div className="card-title-text">
+                      <span style={{ color: 'var(--primary)', marginRight: 8 }}>03</span>
+                      Choose Time Slot
+                    </div>
+                    <div className="card-subtitle-text">
+                      <span style={{ color: '#10b981', fontWeight: 600 }}>{ALL_SLOTS.length - bookedSlots.length} available</span>
+                      {' · '}
+                      <span style={{ color: '#ef4444', fontWeight: 600 }}>{bookedSlots.length} booked</span>
                     </div>
                   </div>
-                  {selectedSlot && <span className="badge badge-available">✓ {selectedSlot}</span>}
                 </div>
                 <div className="card-body">
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <div className="d-flex flex-wrap gap-2">
                     {ALL_SLOTS.map(slot => {
                       const isBooked = bookedSlots.includes(slot);
                       const isSelected = selectedSlot === slot;
@@ -173,13 +216,14 @@ export default function BookAppointment() {
                           key={slot}
                           disabled={isBooked}
                           onClick={() => setSelectedSlot(slot)}
-                          className={`btn btn-sm ${isBooked ? '' : isSelected ? 'btn-primary' : 'btn-outline'}`}
+                          className={`btn btn-sm ${isBooked ? 'btn-outline-secondary' : isSelected ? 'btn-primary' : 'btn-outline-primary'}`}
                           style={{
                             opacity: isBooked ? 0.4 : 1,
                             textDecoration: isBooked ? 'line-through' : 'none',
-                            cursor: isBooked ? 'not-allowed' : 'pointer',
+                            fontSize: 12, padding: '6px 14px',
                           }}
                         >
+                          {isBooked && <i className="bi bi-lock-fill me-1" style={{ fontSize: 9 }} />}
                           {slot}
                         </button>
                       );
@@ -191,41 +235,48 @@ export default function BookAppointment() {
           </div>
 
           {/* Right — Summary */}
-          <div className="card" style={{ position: 'sticky', top: 80 }}>
-            <div className="card-header">
-              <div className="card-title">Booking Summary</div>
-            </div>
-            <div className="card-body">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="col-lg-4">
+            <div className="card" style={{ position: 'sticky', top: 80 }}>
+              <div className="card-header">
+                <div className="card-title-text">Booking Summary</div>
+              </div>
+              <div className="card-body">
                 {[
-                  { label: 'Doctor', value: selectedDoctor ? `Dr. ${selectedDoctor.name}` : '—' },
-                  { label: 'Specialization', value: selectedDoctor?.specialization || '—' },
-                  { label: 'Date', value: date || '—' },
-                  { label: 'Time Slot', value: selectedSlot || '—' },
+                  { icon: 'bi-person-badge', label: 'Doctor', value: selectedDoctor ? `Dr. ${selectedDoctor.name}` : '—' },
+                  { icon: 'bi-stethoscope', label: 'Specialization', value: selectedDoctor?.specialization || '—' },
+                  { icon: 'bi-calendar3', label: 'Date', value: date || '—' },
+                  { icon: 'bi-clock', label: 'Time Slot', value: selectedSlot || '—' },
                 ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>{item.label}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{item.value}</span>
+                  <div key={item.label} className="d-flex align-items-center justify-content-between mb-3">
+                    <div className="d-flex align-items-center gap-2" style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                      <i className={`bi ${item.icon}`} />
+                      {item.label}
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{item.value}</span>
                   </div>
                 ))}
 
                 <div className="divider" />
 
                 {selectedDoctor && date && selectedSlot && (
-                  <div style={{ background: '#f0fdf4', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: '#16a34a', fontWeight: 500 }}>
-                    ✓ Ready to confirm your appointment
+                  <div className="alert alert-success py-2 mb-3" style={{ fontSize: 12 }}>
+                    <i className="bi bi-check-circle-fill me-2" />Ready to confirm
                   </div>
                 )}
 
                 <button
-                  className="btn btn-primary w-full"
+                  className="btn btn-primary w-100 mb-2"
                   onClick={handleBook}
                   disabled={loading || !selectedDoctor || !date || !selectedSlot}
+                  style={{ padding: '10px' }}
                 >
-                  {loading ? '⏳ Booking...' : '✓ Confirm Appointment'}
+                  {loading
+                    ? <><span className="spinner-border spinner-border-sm me-2" />Booking...</>
+                    : <><i className="bi bi-check-lg me-2" />Confirm Appointment</>
+                  }
                 </button>
 
-                <button className="btn btn-ghost w-full" onClick={() => navigate('/dashboard')}>
+                <button className="btn btn-outline-secondary w-100" onClick={() => navigate('/dashboard')}>
                   Cancel
                 </button>
               </div>

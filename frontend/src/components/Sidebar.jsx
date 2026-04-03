@@ -1,62 +1,68 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function Sidebar() {
+export default function Sidebar({ open }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const isActive = (path) => location.pathname === path;
+  const isActive = (p) => location.pathname === p;
 
   const doctorLinks = [
-    { path: '/dashboard', icon: '⊞', label: 'Dashboard' },
-    { path: '/queue', icon: '⏳', label: 'Patient Queue' },
+    { path: '/dashboard', icon: 'bi-grid-1x2-fill', label: 'Dashboard' },
+    { path: '/queue',     icon: 'bi-people-fill',   label: 'Patient Queue' },
   ];
 
   const patientLinks = [
-    { path: '/dashboard', icon: '⊞', label: 'Dashboard' },
-    { path: '/book', icon: '📅', label: 'Book Appointment' },
-    { path: '/doctors', icon: '👨‍⚕️', label: 'Find Doctors' },
+    { path: '/dashboard', icon: 'bi-grid-1x2-fill',    label: 'Dashboard' },
+    { path: '/book',      icon: 'bi-calendar-plus-fill', label: 'Book Appointment' },
+    { path: '/doctors',   icon: 'bi-person-badge-fill',  label: 'Find Doctors' },
   ];
 
   const links = user?.role === 'doctor' ? doctorLinks : patientLinks;
 
   return (
-    <aside className="sidebar">
-      {/* Logo */}
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-text">🏥 SmartDoc</div>
-        <div className="sidebar-logo-sub">Appointment Management System</div>
+    <aside className={`sidebar ${open ? 'open' : ''}`}>
+      {/* Brand */}
+      <div className="sidebar-brand">
+        <div className="sidebar-brand-icon">
+          <i className="bi bi-hospital-fill text-white" style={{ fontSize: 18 }} />
+        </div>
+        <div>
+          <div className="sidebar-brand-name">SmartDoc</div>
+          <div className="sidebar-brand-sub">Appointment System</div>
+        </div>
       </div>
 
       {/* Nav */}
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Main Menu</div>
-        {links.map((link) => (
+        <div className="nav-section-label">Navigation</div>
+        {links.map(link => (
           <button
             key={link.path}
-            className={`sidebar-link ${isActive(link.path) ? 'active' : ''}`}
+            className={`nav-item ${isActive(link.path) ? 'active' : ''}`}
             onClick={() => navigate(link.path)}
           >
-            <span className="sidebar-link-icon">{link.icon}</span>
+            <i className={`bi ${link.icon}`} />
             {link.label}
           </button>
         ))}
       </nav>
 
-      {/* User footer */}
+      {/* Footer */}
       <div className="sidebar-footer">
         <div className="sidebar-user">
-          <div className="sidebar-avatar">{user?.name?.[0]?.toUpperCase()}</div>
-          <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{user?.name}</div>
-            <div className="sidebar-user-role">{user?.role}</div>
+          <div className="user-avatar">{user?.name?.[0]?.toUpperCase()}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="user-name text-truncate">{user?.name}</div>
+            <div className="user-role">{user?.role}</div>
           </div>
           <button
-            className="sidebar-logout"
+            style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: 4, fontSize: 18 }}
             onClick={() => { logout(); navigate('/login'); }}
             title="Logout"
-          >⇥</button>
+          >
+            <i className="bi bi-box-arrow-right" />
+          </button>
         </div>
       </div>
     </aside>

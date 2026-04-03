@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -14,13 +16,32 @@ const PrivateRoute = ({ children, role }) => {
   return children;
 };
 
-function AppLayout({ children }) {
+function Layout({ children }) {
   const { user } = useAuth();
-  if (!user) return children;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (!user) return <>{children}</>;
+
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">{children}</div>
+    <div className="app-wrapper">
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            zIndex: 199, display: 'none',
+          }}
+          className="d-lg-none"
+        />
+      )}
+      <Sidebar open={sidebarOpen} />
+      <div className="main-area">
+        {/* Pass toggle to children via context or prop drilling */}
+        {typeof children === 'function'
+          ? children({ onMenuToggle: () => setSidebarOpen(o => !o) })
+          : children}
+      </div>
     </div>
   );
 }
@@ -28,24 +49,34 @@ function AppLayout({ children }) {
 function AppRoutes() {
   return (
     <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/book" element={<PrivateRoute role="patient"><BookAppointment /></PrivateRoute>} />
-          <Route path="/doctors" element={<PrivateRoute role="patient"><DoctorsPage /></PrivateRoute>} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </AppLayout>
+      <Layout>
+        {({ onMenuToggle } = {}) => (
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={
+              <PrivateRoute><Dashboard onMenuToggle={onMenuToggle} /></PrivateRoute>
+            } />
+            <Route path="/book" element={
+              <PrivateRoute role="patient"><BookAppointment onMenuToggle={onMenuToggle} /></PrivateRoute>
+            } />
+            <Route path="/doctors" element={
+              <PrivateRoute role="patient"><DoctorsPage onMenuToggle={onMenuToggle} /></PrivateRoute>
+            } />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        )}
+      </Layout>
     </BrowserRouter>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

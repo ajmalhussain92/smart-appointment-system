@@ -1,17 +1,25 @@
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useSidebar } from '../App';
 
-export default function TopHeader({ title, subtitle, actions, onMenuToggle }) {
+export default function TopHeader({ title, subtitle, actions }) {
   const { theme, toggle } = useTheme();
   const { user } = useAuth();
+  const { toggleSidebar } = useSidebar();
 
   return (
     <header className="top-header">
       <div className="header-left">
+        {/* Hamburger — mobile only */}
         <button
-          className="btn btn-sm d-lg-none"
-          style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: 20, padding: '4px 8px' }}
-          onClick={onMenuToggle}
+          className="d-lg-none"
+          onClick={toggleSidebar}
+          style={{
+            background: 'none', border: 'none',
+            color: 'var(--text)', fontSize: 22,
+            cursor: 'pointer', padding: '4px 8px',
+            marginRight: 4,
+          }}
         >
           <i className="bi bi-list" />
         </button>
@@ -25,15 +33,17 @@ export default function TopHeader({ title, subtitle, actions, onMenuToggle }) {
         {actions}
 
         {/* Theme toggle */}
-        <button className="theme-toggle" onClick={toggle} title="Toggle theme">
+        <button className="theme-toggle" onClick={toggle} title="Toggle dark/light mode">
           <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
         </button>
 
         {/* Role badge */}
-        <span className={`badge-status ${user?.role === 'doctor' ? 'badge-doctor' : 'badge-patient'}`}>
-          <i className={`bi ${user?.role === 'doctor' ? 'bi-person-badge' : 'bi-person'}`} />
-          {user?.role === 'doctor' ? 'Doctor' : 'Patient'}
-        </span>
+        {user && (
+          <span className={`badge-status ${user.role === 'doctor' ? 'badge-doctor' : 'badge-patient'}`}>
+            <i className={`bi ${user.role === 'doctor' ? 'bi-person-badge-fill' : 'bi-person-fill'} me-1`} />
+            {user.role === 'doctor' ? 'Doctor' : 'Patient'}
+          </span>
+        )}
       </div>
     </header>
   );

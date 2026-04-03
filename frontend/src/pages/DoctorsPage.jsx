@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { doctorAPI } from '../api/services';
 import TopHeader from '../components/TopHeader';
 
-export default function DoctorsPage({ onMenuToggle }) {
+export default function DoctorsPage() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -23,7 +23,6 @@ export default function DoctorsPage({ onMenuToggle }) {
       <TopHeader
         title="Find Doctors"
         subtitle="Home / Doctors"
-        onMenuToggle={onMenuToggle}
         actions={
           <button className="btn btn-primary btn-sm" onClick={() => navigate('/book')}>
             <i className="bi bi-calendar-plus me-1" />Book Appointment

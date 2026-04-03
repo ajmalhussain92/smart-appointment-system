@@ -9,7 +9,7 @@ const ALL_SLOTS = [
   '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM',
 ];
 
-export default function BookAppointment({ onMenuToggle }) {
+export default function BookAppointment() {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [date, setDate] = useState('');
@@ -57,7 +57,6 @@ export default function BookAppointment({ onMenuToggle }) {
       <TopHeader
         title="Book Appointment"
         subtitle="Home / Book Appointment"
-        onMenuToggle={onMenuToggle}
       />
 
       <div className="page-content">

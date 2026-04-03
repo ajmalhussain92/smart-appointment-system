@@ -1,92 +1,188 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Home() {
   const { user } = useAuth();
+  const { theme, toggle } = useTheme();
 
   return (
-    <div style={styles.page}>
-      <div style={styles.nav}>
-        <div style={styles.navBrand}>🏥 SmartDoc</div>
-        <Link to={user ? '/dashboard' : '/login'} style={styles.navBtn}>
-          {user ? 'Go to Dashboard →' : 'Sign In →'}
-        </Link>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
 
-      <div style={styles.hero}>
-        <div style={styles.heroBadge}>🏆 Hackathon Project — HealthTech</div>
-        <h1 style={styles.heroTitle}>
+      {/* Navbar */}
+      <nav style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '14px 40px',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
+        position: 'sticky', top: 0, zIndex: 50,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 34, height: 34, background: '#3b82f6', borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 16 }} />
+          </div>
+          <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.3 }}>SmartDoc</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={toggle}
+            style={{
+              background: 'var(--surface-2)', border: '1px solid var(--border)',
+              borderRadius: 8, width: 36, height: 36,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'var(--text-muted)', fontSize: 15,
+            }}
+          >
+            <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
+          </button>
+          <Link
+            to={user ? '/dashboard' : '/login'}
+            className="btn btn-primary btn-sm"
+            style={{ fontSize: 13 }}
+          >
+            {user ? 'Dashboard' : 'Sign In'}
+            <i className="bi bi-arrow-right ms-1" />
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '80px 24px 64px', textAlign: 'center' }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: 'rgba(59,130,246,0.1)', color: '#3b82f6',
+          padding: '5px 16px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+          marginBottom: 28, border: '1px solid rgba(59,130,246,0.2)',
+        }}>
+          <i className="bi bi-trophy-fill" style={{ fontSize: 11 }} />
+          Hackathon Project — HealthTech Track
+        </div>
+
+        <h1 style={{
+          fontSize: 54, fontWeight: 900, lineHeight: 1.1,
+          letterSpacing: -2, marginBottom: 20,
+          color: 'var(--text)',
+        }}>
           Smart Appointment<br />
-          <span style={styles.heroAccent}>Scheduling System</span>
+          <span style={{ color: '#3b82f6' }}>Scheduling System</span>
         </h1>
-        <p style={styles.heroSub}>
+
+        <p style={{
+          fontSize: 17, color: 'var(--text-muted)', lineHeight: 1.75,
+          maxWidth: 540, margin: '0 auto 36px',
+        }}>
           An intelligent appointment management system that optimizes scheduling,
           reduces patient waiting time, and improves operational efficiency.
         </p>
-        <div style={styles.heroActions}>
-          <Link to={user ? '/dashboard' : '/login'} style={styles.primaryBtn}>
-            {user ? 'Open Dashboard' : 'Get Started'} →
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <Link to={user ? '/dashboard' : '/login'} className="btn btn-primary" style={{ padding: '11px 28px', fontSize: 14 }}>
+            <i className="bi bi-arrow-right-circle-fill me-2" />
+            {user ? 'Open Dashboard' : 'Get Started Free'}
           </Link>
+          {!user && (
+            <Link to="/login" className="btn btn-outline-secondary" style={{ padding: '11px 28px', fontSize: 14 }}>
+              <i className="bi bi-play-circle me-2" />
+              View Demo
+            </Link>
+          )}
+        </div>
+
+        {/* Stats row */}
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: 40,
+          marginTop: 56, flexWrap: 'wrap',
+        }}>
+          {[
+            { value: '5+', label: 'Doctors' },
+            { value: '12', label: 'Time Slots' },
+            { value: '30s', label: 'Live Refresh' },
+            { value: '100%', label: 'Real-time' },
+          ].map(s => (
+            <div key={s.label} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#3b82f6', letterSpacing: -1 }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div style={styles.features}>
-        {[
-          { icon: '⏱️', title: 'Real-time Queue', desc: 'Live queue position and estimated waiting time for every patient.' },
-          { icon: '📊', title: 'Doctor Analytics', desc: 'Track utilization, completion rates, and workload distribution.' },
-          { icon: '🔔', title: 'Smart Alerts', desc: 'Automatic no-show detection and appointment reminders.' },
-          { icon: '🗓️', title: 'Slot Management', desc: 'Prevent double booking with intelligent slot conflict detection.' },
-          { icon: '👥', title: 'Role-based Access', desc: 'Separate dashboards for doctors and patients.' },
-          { icon: '⚡', title: 'Auto Refresh', desc: 'Dashboard updates every 30 seconds automatically.' },
-        ].map(f => (
-          <div key={f.title} style={styles.featureCard}>
-            <div style={styles.featureIcon}>{f.icon}</div>
-            <div style={styles.featureTitle}>{f.title}</div>
-            <div style={styles.featureDesc}>{f.desc}</div>
-          </div>
-        ))}
+      {/* Features Grid */}
+      <div style={{
+        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <div style={{
+          maxWidth: 1100, margin: '0 auto',
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 0,
+        }}>
+          {[
+            { icon: 'bi-lightning-charge-fill', color: '#f59e0b', title: 'Real-time Queue', desc: 'Live queue position and estimated waiting time. Auto-refreshes every 30 seconds.' },
+            { icon: 'bi-bar-chart-line-fill', color: '#3b82f6', title: 'Doctor Analytics', desc: 'Track utilization rates, completion stats, and workload distribution per doctor.' },
+            { icon: 'bi-bell-fill', color: '#8b5cf6', title: 'Smart Alerts', desc: 'Automatic no-show detection, overdue appointment warnings, and upcoming reminders.' },
+            { icon: 'bi-calendar-check-fill', color: '#10b981', title: 'Slot Management', desc: 'Prevent double booking with intelligent conflict detection and slot locking.' },
+            { icon: 'bi-shield-lock-fill', color: '#ef4444', title: 'Role-based Access', desc: 'Separate secure dashboards for doctors and patients with JWT authentication.' },
+            { icon: 'bi-moon-stars-fill', color: '#6366f1', title: 'Dark / Light Mode', desc: 'Full dark and light theme support with instant toggle and persistent preference.' },
+          ].map((f, i) => (
+            <div
+              key={f.title}
+              style={{
+                padding: '32px 28px',
+                background: 'var(--surface)',
+                borderRight: i % 3 !== 2 ? '1px solid var(--border)' : 'none',
+                borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
+                transition: 'background 0.15s',
+              }}
+            >
+              <div style={{
+                width: 42, height: 42, borderRadius: 10,
+                background: f.color + '18',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 14,
+              }}>
+                <i className={`bi ${f.icon}`} style={{ color: f.color, fontSize: 18 }} />
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{f.title}</div>
+              <div style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.65 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div style={{ textAlign: 'center', padding: '64px 24px', background: 'var(--surface)' }}>
+        <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', marginBottom: 12, letterSpacing: -0.5 }}>
+          Ready to get started?
+        </h2>
+        <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 28 }}>
+          Register as a doctor or patient and experience smart scheduling.
+        </p>
+        <Link to="/login" className="btn btn-primary" style={{ padding: '12px 32px', fontSize: 14 }}>
+          <i className="bi bi-person-plus-fill me-2" />
+          Create Account
+        </Link>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        borderTop: '1px solid var(--border)',
+        padding: '20px 40px',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        background: 'var(--surface)',
+        flexWrap: 'wrap', gap: 8,
+      }}>
+        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          © 2025 SmartDoc — Built for Hackathon HealthTech Track
+        </span>
+        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          React + Node.js + MongoDB
+        </span>
       </div>
     </div>
   );
 }
-
-const styles = {
-  page: { minHeight: '100vh', background: '#fff' },
-  nav: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '16px 40px', borderBottom: '1px solid #e5e7eb',
-  },
-  navBrand: { fontSize: 18, fontWeight: 800, color: '#111827' },
-  navBtn: {
-    background: '#2563eb', color: '#fff', padding: '8px 20px',
-    borderRadius: 8, fontWeight: 600, fontSize: 14,
-  },
-  hero: {
-    maxWidth: 700, margin: '0 auto',
-    padding: '80px 24px 60px', textAlign: 'center',
-  },
-  heroBadge: {
-    display: 'inline-block', background: '#eff6ff', color: '#2563eb',
-    padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-    marginBottom: 24,
-  },
-  heroTitle: { fontSize: 52, fontWeight: 900, color: '#111827', lineHeight: 1.1, marginBottom: 20, letterSpacing: -2 },
-  heroAccent: { color: '#2563eb' },
-  heroSub: { fontSize: 17, color: '#6b7280', lineHeight: 1.7, maxWidth: 520, margin: '0 auto 36px' },
-  heroActions: { display: 'flex', justifyContent: 'center', gap: 12 },
-  primaryBtn: {
-    background: '#2563eb', color: '#fff', padding: '13px 28px',
-    borderRadius: 8, fontWeight: 700, fontSize: 15,
-  },
-  features: {
-    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 1, background: '#e5e7eb',
-    borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb',
-  },
-  featureCard: {
-    background: '#fff', padding: '32px 28px',
-  },
-  featureIcon: { fontSize: 28, marginBottom: 12 },
-  featureTitle: { fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 8 },
-  featureDesc: { fontSize: 13.5, color: '#6b7280', lineHeight: 1.6 },
-};

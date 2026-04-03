@@ -11,7 +11,7 @@ const STATUS_BADGE = {
   'no-show': <span className="badge-status badge-noshow"><i className="bi bi-dash-circle-fill" /> No-Show</span>,
 };
 
-export default function Dashboard({ onMenuToggle }) {
+export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
@@ -65,7 +65,6 @@ export default function Dashboard({ onMenuToggle }) {
       <TopHeader
         title={isDoctor ? 'Doctor Dashboard' : 'My Appointments'}
         subtitle={`Home / Dashboard · Refreshed ${lastRefresh.toLocaleTimeString()}`}
-        onMenuToggle={onMenuToggle}
         actions={
           isDoctor && (
             <button

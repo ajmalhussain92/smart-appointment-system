@@ -36,7 +36,7 @@ export default function Login() {
       <div style={{
         flex: 1, background: 'linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #1d4ed8 100%)',
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        padding: '48px', position: 'relative', overflow: 'hidden',
+        padding: '48px 56px', position: 'relative', overflow: 'hidden',
       }} className="d-none d-lg-flex">
 
         {/* Background pattern */}

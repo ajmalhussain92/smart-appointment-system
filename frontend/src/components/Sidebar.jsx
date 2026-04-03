@@ -3,21 +3,21 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../App';
 
 export default function Sidebar({ collapsed, mobileOpen }) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { toggleCollapse } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (p) => location.pathname === p;
 
   const doctorLinks = [
-    { path: '/dashboard', icon: 'bi-grid-1x2-fill',     label: 'Dashboard' },
-    { path: '/dashboard', icon: 'bi-people-fill',        label: 'Patient Queue' },
+    { path: '/dashboard', icon: 'bi-grid-1x2-fill',      label: 'Dashboard' },
+    { path: '/dashboard', icon: 'bi-people-fill',         label: 'Patient Queue' },
   ];
 
   const patientLinks = [
-    { path: '/dashboard', icon: 'bi-grid-1x2-fill',      label: 'Dashboard' },
-    { path: '/book',      icon: 'bi-calendar-plus-fill',  label: 'Book Appointment' },
-    { path: '/doctors',   icon: 'bi-person-badge-fill',   label: 'Find Doctors' },
+    { path: '/dashboard', icon: 'bi-grid-1x2-fill',       label: 'Dashboard' },
+    { path: '/book',      icon: 'bi-calendar-plus-fill',   label: 'Book Appointment' },
+    { path: '/doctors',   icon: 'bi-person-badge-fill',    label: 'Find Doctors' },
   ];
 
   const links = user?.role === 'doctor' ? doctorLinks : patientLinks;
@@ -54,33 +54,17 @@ export default function Sidebar({ collapsed, mobileOpen }) {
         ))}
       </nav>
 
-      {/* Footer — user info + logout */}
+      {/* Footer — collapse toggle button only */}
       <div className="sidebar-footer">
-        <div className="sidebar-user">
-          <div className="user-avatar">{user?.name?.[0]?.toUpperCase()}</div>
-          {!collapsed && (
-            <div className="sidebar-user-info" style={{ flex: 1, minWidth: 0 }}>
-              <div className="user-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user?.name}
-              </div>
-              <div className="user-role" style={{ overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 11, color: 'var(--sidebar-text)' }}>
-                {user?.role}
-              </div>
-            </div>
-          )}
-          <button
-            onClick={() => { logout(); navigate('/login'); }}
-            title="Logout"
-            style={{
-              background: 'none', border: 'none',
-              color: '#6b7280', cursor: 'pointer',
-              padding: 4, fontSize: 17, flexShrink: 0,
-              display: 'flex', alignItems: 'center',
-            }}
-          >
-            <i className="bi bi-box-arrow-right" />
-          </button>
-        </div>
+        <button
+          onClick={toggleCollapse}
+          className="nav-item"
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          style={{ justifyContent: collapsed ? 'center' : 'flex-start', marginBottom: 0 }}
+        >
+          <i className={`bi ${collapsed ? 'bi-layout-sidebar-reverse' : 'bi-layout-sidebar'}`} />
+          {!collapsed && <span className="nav-label">Collapse</span>}
+        </button>
       </div>
     </aside>
   );

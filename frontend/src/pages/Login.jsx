@@ -48,7 +48,7 @@ export default function Login() {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '48px 56px',
+        padding: '40px 40px',
         position: 'relative',
         overflow: 'hidden',
         minWidth: 0,
@@ -62,7 +62,7 @@ export default function Login() {
           backgroundSize: '32px 32px',
         }} />
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
             <div style={{
@@ -113,7 +113,7 @@ export default function Login() {
 
       {/* ── Right Panel ── */}
       <div style={{
-        width: '460px',
+        width: '500px',
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',

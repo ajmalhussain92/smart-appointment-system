@@ -98,4 +98,31 @@ const cancelAppointment = async (req, res) => {
   }
 };
 
-module.exports = { getSlots, bookAppointment, getMyAppointments, updateStatus, cancelAppointment };
+const markNoShow = async (req, res) => {
+  try {
+    const appointment = await Appointment.findOneAndUpdate(
+      { _id: req.params.id, doctor: req.user._id },
+      { status: 'no-show' },
+      { new: true }
+    );
+    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+    res.json(appointment);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getWaitingTime = async (req, res) => {
+  const { doctorId, date } = req.query;
+  if (!doctorId || !date)
+    return res.status(400).json({ message: 'doctorId and date are required' });
+
+  try {
+    const waitingCount = await Appointment.countDocuments({ doctor: doctorId, date, status: 'waiting' });
+    res.json({ waitingCount, estimatedMinutes: waitingCount * 15, avgConsultationMinutes: 15 });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getSlots, bookAppointment, getMyAppointments, updateStatus, cancelAppointment, markNoShow, getWaitingTime };

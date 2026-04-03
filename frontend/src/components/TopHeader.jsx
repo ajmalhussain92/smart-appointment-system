@@ -31,9 +31,10 @@ export default function TopHeader({ title, subtitle, actions }) {
         <button
           className="theme-toggle"
           onClick={toggle}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          style={{ color: theme === 'dark' ? '#fbbf24' : '#6366f1' }}
         >
-          <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
+          <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-stars-fill'}`} />
         </button>
 
         {/* Role badge */}

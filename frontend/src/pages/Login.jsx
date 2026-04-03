@@ -75,7 +75,7 @@ export default function Login() {
               { icon: 'bi-lightning-charge-fill', text: 'Real-time queue updates every 30 seconds' },
               { icon: 'bi-bar-chart-fill', text: 'Doctor utilization & performance tracking' },
               { icon: 'bi-bell-fill', text: 'Smart no-show detection & alerts' },
-              { icon: 'bi-shield-check-fill', text: 'Role-based access for doctors & patients' },
+              { icon: 'bi-shield-check', text: 'Role-based access for doctors & patients' },
             ].map(f => (
               <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{

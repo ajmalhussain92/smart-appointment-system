@@ -5,7 +5,6 @@ import TopHeader from '../components/TopHeader';
 
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState([]);
-  const [doctorStats, setDoctorStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [availableOnly, setAvailableOnly] = useState(false);
@@ -17,42 +16,17 @@ export default function DoctorsPage() {
     const params = {};
     if (availableOnly) params.available = true;
     if (typeFilter !== 'all') params.type = typeFilter;
-
-    Promise.all([
-      doctorAPI.getAll(params),
-      doctorAPI.getRankings().catch(() => ({ data: {} })),
-    ])
-    .then(([{ data: doctorsData }, { data: rankingsData }]) => {
-      setDoctors(doctorsData);
-      setDoctorStats(rankingsData);
-    })
-    .finally(() => setLoading(false));
+    doctorAPI.getAll(params)
+      .then(({ data }) => setDoctors(data))
+      .finally(() => setLoading(false));
   }, [availableOnly, typeFilter]);
 
-  const filtered = doctors
-    .map(d => ({ ...d, stats: doctorStats[d._id] || { total: 0, completed: 0, noShow: 0, rating: null } }))
-    .sort((a, b) => {
-      // null rating (no data) goes to bottom
-      if (a.stats.rating === null && b.stats.rating === null) return 0;
-      if (a.stats.rating === null) return 1;
-      if (b.stats.rating === null) return -1;
-      return b.stats.rating - a.stats.rating;
-    })
-    .filter(d =>
-      d.name.toLowerCase().includes(search.toLowerCase()) ||
-      (d.specialization || '').toLowerCase().includes(search.toLowerCase())
-    );
+  const filtered = doctors.filter(d =>
+    d.name.toLowerCase().includes(search.toLowerCase()) ||
+    (d.specialization || '').toLowerCase().includes(search.toLowerCase())
+  );
 
   const isDoctorOffToday = (doc) => doc.offDays?.includes(today);
-
-  const getRankBadge = (rating) => {
-    if (rating === null) return { label: 'New', color: '#64748b', bg: 'rgba(100,116,139,0.1)' };
-    if (rating >= 90)   return { label: '★★★★★', color: '#12b76a', bg: 'rgba(18,183,106,0.12)' };
-    if (rating >= 75)   return { label: '★★★★',  color: '#059669', bg: 'rgba(5,150,105,0.12)'  };
-    if (rating >= 60)   return { label: '★★★',   color: '#f79009', bg: 'rgba(247,144,9,0.12)'  };
-    if (rating >= 40)   return { label: '★★',    color: '#f97316', bg: 'rgba(249,115,22,0.12)' };
-    return                     { label: '★',     color: '#ef4444', bg: 'rgba(239,68,68,0.12)'  };
-  };
 
   return (
     <div>
@@ -128,7 +102,7 @@ export default function DoctorsPage() {
                 <p>Try different filters</p>
               </div>
             ) : (
-              <div className="table-fixed-wrap">
+              <div className="table-responsive">
                 <table className="pro-table">
                   <thead>
                     <tr>
@@ -136,7 +110,6 @@ export default function DoctorsPage() {
                       <th>Doctor</th>
                       <th>Specialization</th>
                       <th>Type</th>
-                      <th>Ranking</th>
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
@@ -144,7 +117,6 @@ export default function DoctorsPage() {
                   <tbody>
                     {filtered.map((doc, i) => {
                       const offToday = isDoctorOffToday(doc);
-                      const rank = getRankBadge(doc.stats.rating);
                       return (
                         <tr key={doc._id}>
                           <td style={{ color: 'var(--text-light)', fontWeight: 600, fontSize: 12 }}>{i + 1}</td>
@@ -183,26 +155,6 @@ export default function DoctorsPage() {
                             </div>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{
-                                background: rank.bg,
-                                color: rank.color,
-                                padding: '2px 8px',
-                                borderRadius: 4,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                whiteSpace: 'nowrap'
-                              }}>
-                                {rank.label}
-                              </span>
-                              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                                {doc.stats.rating !== null
-                                  ? `${doc.stats.rating}% (${doc.stats.completed}/${doc.stats.total})`
-                                  : 'No data yet'}
-                              </span>
-                            </div>
-                          </td>
-                          <td>
                             {offToday ? (
                               <span className="badge-status badge-cancelled">
                                 <i className="bi bi-calendar-x-fill" style={{ fontSize: 9 }} /> Off Today
@@ -218,7 +170,7 @@ export default function DoctorsPage() {
                             <button
                               className="btn btn-primary btn-sm"
                               disabled={!doc.isAvailable || offToday}
-                              onClick={() => navigate('/book', { state: { doctor: doc } })}
+                              onClick={() => navigate('/book')}
                               style={{ fontSize: 12 }}
                               title={offToday ? 'Doctor is off today' : !doc.isAvailable ? 'Doctor unavailable' : 'Book'}
                             >

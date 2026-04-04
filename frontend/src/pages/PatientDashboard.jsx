@@ -6,12 +6,10 @@ import TopHeader from '../components/TopHeader';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const STATUS_BADGE = {
-  pending:       <span className="badge-status badge-pending">Pending</span>,
-  confirmed:     <span className="badge-status badge-confirmed">Confirmed</span>,
-  'in-progress': <span className="badge-status badge-inprogress">In Progress</span>,
-  completed:     <span className="badge-status badge-completed">Completed</span>,
-  cancelled:     <span className="badge-status badge-cancelled">Cancelled</span>,
-  'no-show':     <span className="badge-status badge-noshow">No-Show</span>,
+  waiting:   <span className="badge-status badge-waiting">Waiting</span>,
+  completed: <span className="badge-status badge-completed">Completed</span>,
+  cancelled: <span className="badge-status badge-cancelled">Cancelled</span>,
+  'no-show': <span className="badge-status badge-noshow">No-Show</span>,
 };
 
 export default function PatientDashboard() {
@@ -20,24 +18,19 @@ export default function PatientDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [showPast, setShowPast] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
-  const [page, setPage] = useState(1);
-  const PER_PAGE = 8;
 
   const fetchData = useCallback(async (silent = false) => {
     try {
       const params = filter !== 'all' ? { status: filter } : {};
-      if (showPast) params.showPast = true;
       const { data } = await appointmentAPI.getMy(params);
       setAppointments(data);
       setLastRefresh(new Date());
     } catch (e) { console.error(e); }
     finally { if (!silent) setLoading(false); }
-  }, [filter, showPast]);
+  }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData, filter, showPast]);
-  useEffect(() => { setPage(1); }, [filter, showPast]);
+  useEffect(() => { fetchData(); }, [fetchData, filter]);
   useEffect(() => {
     const t = setInterval(() => fetchData(true), 30000);
     return () => clearInterval(t);
@@ -48,22 +41,22 @@ export default function PatientDashboard() {
     try { await appointmentAPI.cancel(id); fetchData(true); } catch (e) { console.error(e); }
   };
 
-  const pending     = appointments.filter(a => a.status === 'pending');
-  const confirmed   = appointments.filter(a => a.status === 'confirmed');
-  const inProgress  = appointments.filter(a => a.status === 'in-progress');
-  const completed   = appointments.filter(a => a.status === 'completed');
-  const cancelled   = appointments.filter(a => a.status === 'cancelled');
-  const queue       = [...pending, ...confirmed, ...inProgress];
-  const filtered    = filter === 'all' ? appointments : appointments.filter(a => a.status === filter);
-  const nextAppt    = [...queue].sort((a, b) => a.queuePosition - b.queuePosition)[0];
-  const totalPages  = Math.ceil(filtered.length / PER_PAGE);
-  const paginated   = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const waiting   = appointments.filter(a => a.status === 'waiting');
+  const completed = appointments.filter(a => a.status === 'completed');
+  const cancelled = appointments.filter(a => a.status === 'cancelled');
+  const filtered  = filter === 'all' ? appointments : appointments.filter(a => a.status === filter);
+  const nextAppt  = waiting.sort((a, b) => a.queuePosition - b.queuePosition)[0];
 
   return (
     <div>
       <TopHeader
         title="My Appointments"
         subtitle={`Home / Dashboard  ·  Updated ${lastRefresh.toLocaleTimeString()}`}
+        actions={
+          <button className="btn btn-primary btn-sm" onClick={() => navigate('/book')}>
+            <i className="bi bi-plus-lg me-1" />Book Appointment
+          </button>
+        }
       />
 
       <div className="page-content">
@@ -71,9 +64,9 @@ export default function PatientDashboard() {
         {/* ── Stats ── */}
         <div className="row g-3 mb-3">
           {[
-            { icon: 'bi-clock-history',     label: 'In Queue',  value: queue.length,       color: '#f79009', bg: 'var(--warning-light)' },
-            { icon: 'bi-check-circle-fill', label: 'Completed', value: completed.length,   color: '#12b76a', bg: 'var(--success-light)' },
-            { icon: 'bi-x-circle-fill',     label: 'Cancelled', value: cancelled.length,   color: '#f04438', bg: 'var(--danger-light)'  },
+            { icon: 'bi-clock-history',     label: 'Waiting',   value: waiting.length,   color: '#f79009', bg: 'var(--warning-light)' },
+            { icon: 'bi-check-circle-fill', label: 'Completed', value: completed.length, color: '#12b76a', bg: 'var(--success-light)' },
+            { icon: 'bi-x-circle-fill',     label: 'Cancelled', value: cancelled.length, color: '#f04438', bg: 'var(--danger-light)'  },
             { icon: 'bi-calendar3',         label: 'Total',     value: appointments.length, color: '#3b82f6', bg: 'var(--primary-light)' },
           ].map((s, i) => (
             <div className="col-6 col-md-3" key={i}>
@@ -90,10 +83,11 @@ export default function PatientDashboard() {
           ))}
         </div>
 
-        <div className="dash-grid">
-          {/* ── Left: Table ── */}
-          <div className="dash-grid-left">
-            <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div className="row g-3">
+
+          {/* ── Appointments Table ── */}
+          <div className="col-12 col-xl-8">
+            <div className="card fade-in">
               <div className="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                   <div className="card-title-text d-flex align-items-center gap-2">
@@ -105,141 +99,120 @@ export default function PatientDashboard() {
                   <div className="card-subtitle-text">{filtered.length} records</div>
                 </div>
                 <div className="d-flex gap-1 flex-wrap">
-                  {['all', 'pending', 'confirmed', 'in-progress', 'completed', 'cancelled'].map(f => (
+                  {['all', 'waiting', 'completed', 'cancelled'].map(f => (
                     <button key={f} className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-outline-secondary'}`}
                       onClick={() => setFilter(f)} style={{ textTransform: 'capitalize', fontSize: 11, padding: '4px 10px' }}>
                       {f}
                     </button>
                   ))}
-                  <button className={`btn btn-sm ${showPast ? 'btn-warning' : 'btn-outline-secondary'}`}
-                    onClick={() => setShowPast(p => !p)} style={{ fontSize: 11, padding: '4px 10px' }}>
-                    <i className="bi bi-clock-history me-1" />{showPast ? 'Showing Past' : 'Show Past'}
-                  </button>
                 </div>
               </div>
 
-              <div className="card-body p-0" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              <div className="card-body p-0">
                 {loading ? (
-                  <div className="d-flex justify-content-center align-items-center" style={{ height: 460 }}>
+                  <div className="d-flex justify-content-center align-items-center py-5 gap-3">
                     <div className="spinner-border text-primary" style={{ width: 26, height: 26, borderWidth: 3 }} />
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13, marginLeft: 10 }}>Loading...</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading...</span>
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="empty-state" style={{ height: 460, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="bi bi-calendar-x" style={{ fontSize: 44, opacity: 0.3, marginBottom: 14 }} />
+                  <div className="empty-state">
+                    <i className="bi bi-calendar-x" />
                     <h6>No appointments found</h6>
+                    <p>
+                      <button className="btn btn-primary btn-sm mt-3" onClick={() => navigate('/book')}>
+                        <i className="bi bi-plus-lg me-1" />Book Appointment
+                      </button>
+                    </p>
                   </div>
                 ) : (
-                  <>
-                    <div className="table-fixed-wrap">
-                      <table className="pro-table">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>Doctor</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Type</th>
-                            <th>Queue</th>
-                            <th>Est. Wait</th>
-                            <th>Status</th>
-                            <th>Medicines</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {paginated.map((a, i) => {
-                            const waitMins = ['pending', 'confirmed', 'in-progress'].includes(a.status) ? (a.queuePosition - 1) * 15 : null;
-                            return (
-                              <tr key={a._id}>
-                                <td style={{ color: 'var(--text-light)', fontWeight: 600, fontSize: 12 }}>{(page - 1) * PER_PAGE + i + 1}</td>
-                                <td>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <div style={{
-                                      width: 30, height: 30, borderRadius: '50%',
-                                      background: 'linear-gradient(135deg, #3b82f6, #7c3aed)',
-                                      color: '#fff', fontSize: 11, fontWeight: 700,
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                    }}>
-                                      {a.doctor?.name?.[0]}
-                                    </div>
-                                    <div>
-                                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>Dr. {a.doctor?.name}</div>
-                                      {a.doctor?.specialization && (
-                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.doctor.specialization}</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.date}</td>
-                                <td><span style={{ fontWeight: 600, fontSize: 13 }}>{a.timeSlot}</span></td>
-                                <td>
-                                  <span style={{
-                                    fontSize: 10, padding: '2px 7px', borderRadius: 10, fontWeight: 600,
-                                    background: a.type === 'online' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
-                                    color: a.type === 'online' ? '#6366f1' : '#059669',
+                  <div className="table-responsive">
+                    <table className="pro-table">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Doctor</th>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Type</th>
+                          <th>Queue</th>
+                          <th>Est. Wait</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((a, i) => {
+                          const waitMins = a.status === 'waiting' ? (a.queuePosition - 1) * 15 : null;
+                          return (
+                            <tr key={a._id}>
+                              <td style={{ color: 'var(--text-light)', fontWeight: 600, fontSize: 12 }}>{i + 1}</td>
+                              <td>
+                                <div className="d-flex align-items-center gap-2">
+                                  <div style={{
+                                    width: 30, height: 30, borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #3b82f6, #7c3aed)',
+                                    color: '#fff', fontSize: 11, fontWeight: 700,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                                   }}>
-                                    <i className={`bi ${a.type === 'online' ? 'bi-camera-video-fill' : 'bi-hospital-fill'} me-1`} style={{ fontSize: 9 }} />
-                                    {a.type === 'online' ? 'Online' : 'In-Person'}
+                                    {a.doctor?.name?.[0]}
+                                  </div>
+                                  <div>
+                                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>Dr. {a.doctor?.name}</div>
+                                    {a.doctor?.specialization && (
+                                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.doctor.specialization}</div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.date}</td>
+                              <td><span style={{ fontWeight: 600, fontSize: 13 }}>{a.timeSlot}</span></td>
+                              <td>
+                                {/* Type badge */}
+                                <span style={{
+                                  fontSize: 10, padding: '2px 7px', borderRadius: 10, fontWeight: 600,
+                                  background: a.type === 'online' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
+                                  color: a.type === 'online' ? '#6366f1' : '#059669',
+                                }}>
+                                  <i className={`bi ${a.type === 'online' ? 'bi-camera-video-fill' : 'bi-hospital-fill'} me-1`} style={{ fontSize: 9 }} />
+                                  {a.type === 'online' ? 'Online' : 'In-Person'}
+                                </span>
+                              </td>
+                              <td>
+                                {a.status === 'waiting'
+                                  ? <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: 13 }}>#{a.queuePosition}</span>
+                                  : <span style={{ color: 'var(--text-light)' }}>—</span>}
+                              </td>
+                              <td>
+                                {waitMins !== null ? (
+                                  <span style={{ fontSize: 12, fontWeight: 600,
+                                    color: waitMins === 0 ? 'var(--success)' : waitMins <= 30 ? 'var(--warning)' : 'var(--danger)' }}>
+                                    {waitMins === 0 ? '● Next!' : `~${waitMins}m`}
                                   </span>
-                                </td>
-                                <td>
-                                  {['pending', 'confirmed', 'in-progress'].includes(a.status)
-                                    ? <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: 13 }}>#{a.queuePosition}</span>
-                                    : <span style={{ color: 'var(--text-light)' }}>—</span>}
-                                </td>
-                                <td>
-                                  {waitMins !== null ? (
-                                    <span style={{ fontSize: 12, fontWeight: 600,
-                                      color: waitMins === 0 ? 'var(--success)' : waitMins <= 30 ? 'var(--warning)' : 'var(--danger)' }}>
-                                      {waitMins === 0 ? '● Next!' : `~${waitMins}m`}
-                                    </span>
-                                  ) : <span style={{ color: 'var(--text-light)' }}>—</span>}
-                                </td>
-                                <td>{STATUS_BADGE[a.status] || STATUS_BADGE.cancelled}</td>
-                                <td style={{ fontSize: 11, color: 'var(--text-muted)', maxWidth: 140 }}>
-                                  {a.medicines ? (
-                                    <span title={a.medicines}>
-                                      <i className="bi bi-capsule me-1" style={{ color: '#7c3aed' }} />
-                                      {a.medicines.length > 30 ? a.medicines.slice(0, 30) + '…' : a.medicines}
-                                    </span>
-                                  ) : '—'}
-                                </td>
-                                <td>
-                                  {['pending', 'confirmed', 'in-progress'].includes(a.status) && (
-                                    <button className="btn btn-outline-danger btn-sm" style={{ fontSize: 11, padding: '3px 9px' }}
-                                      onClick={() => handleCancel(a._id)}>
-                                      <i className="bi bi-x-lg" />
-                                    </button>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="pagination-bar">
-                        <span>Showing {(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE, filtered.length)} of {filtered.length}</span>
-                        <div className="pages">
-                          <button onClick={() => setPage(p => p-1)} disabled={page === 1}><i className="bi bi-chevron-left" /></button>
-                          {Array.from({ length: totalPages }, (_, i) => (
-                            <button key={i} className={page === i+1 ? 'active' : ''} onClick={() => setPage(i+1)}>{i+1}</button>
-                          ))}
-                          <button onClick={() => setPage(p => p+1)} disabled={page === totalPages}><i className="bi bi-chevron-right" /></button>
-                        </div>
-                      </div>
-                    )}
-                  </>
+                                ) : <span style={{ color: 'var(--text-light)' }}>—</span>}
+                              </td>
+                              <td>{STATUS_BADGE[a.status] || STATUS_BADGE.cancelled}</td>
+                              <td>
+                                {a.status === 'waiting' && (
+                                  <button className="btn btn-outline-danger btn-sm" style={{ fontSize: 11, padding: '3px 9px' }}
+                                    onClick={() => handleCancel(a._id)}>
+                                    <i className="bi bi-x-lg" />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             </div>
           </div>
 
           {/* ── Right Panel ── */}
-          <div className="dash-grid-right">
+          <div className="col-12 col-xl-4">
+            <div className="d-flex flex-column gap-3">
 
               {/* Next Appointment */}
               <div className="card scale-in">
@@ -297,6 +270,41 @@ export default function PatientDashboard() {
                 </div>
               </div>
 
+              {/* Quick Actions */}
+              <div className="card scale-in" style={{ animationDelay: '0.08s' }}>
+                <div className="card-header">
+                  <div className="card-title-text">
+                    <i className="bi bi-lightning-fill me-2" style={{ color: 'var(--warning)' }} />
+                    Quick Actions
+                  </div>
+                </div>
+                <div className="card-body" style={{ padding: '12px !important' }}>
+                  {[
+                    { icon: 'bi-calendar-plus-fill', label: 'Book Appointment', color: '#3b82f6', action: () => navigate('/book') },
+                    { icon: 'bi-person-badge-fill',  label: 'Find Doctors',     color: '#7c3aed', action: () => navigate('/doctors') },
+                  ].map(q => (
+                    <button
+                      key={q.label}
+                      onClick={q.action}
+                      className="w-100 d-flex align-items-center gap-3"
+                      style={{
+                        background: 'var(--surface-2)', border: '1px solid var(--border)',
+                        borderRadius: 8, padding: '10px 14px', cursor: 'pointer',
+                        marginBottom: 8, transition: 'all 0.15s', color: 'var(--text)',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = q.color; e.currentTarget.style.background = 'var(--surface)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface-2)'; }}
+                    >
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: q.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className={`bi ${q.icon}`} style={{ color: q.color, fontSize: 16 }} />
+                      </div>
+                      <span style={{ fontWeight: 600, fontSize: 13 }}>{q.label}</span>
+                      <i className="bi bi-chevron-right ms-auto" style={{ fontSize: 12, color: 'var(--text-light)' }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Appointment Status Chart */}
               <div className="card scale-in" style={{ animationDelay: '0.12s' }}>
                 <div className="card-header">
@@ -308,7 +316,7 @@ export default function PatientDashboard() {
                 <div className="card-body">
                   <ResponsiveContainer width="100%" height={140}>
                     <BarChart data={[
-                      { name: 'Queue',     value: queue.length,     fill: '#3b82f6' },
+                      { name: 'Waiting',   value: waiting.length,   fill: '#3b82f6' },
                       { name: 'Done',      value: completed.length, fill: '#12b76a' },
                       { name: 'Cancelled', value: cancelled.length, fill: '#f04438' },
                     ]} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
@@ -317,7 +325,7 @@ export default function PatientDashboard() {
                       <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip />
                       <Bar dataKey="value" radius={[4,4,0,0]} maxBarSize={36}>
-                        {[queue.length, completed.length, cancelled.length].map((_, i) => (
+                        {[waiting.length, completed.length, cancelled.length].map((_, i) => (
                           <Cell key={i} fill={['#3b82f6','#12b76a','#f04438'][i]} />
                         ))}
                       </Bar>
@@ -326,6 +334,7 @@ export default function PatientDashboard() {
                 </div>
               </div>
 
+            </div>
           </div>
         </div>
       </div>

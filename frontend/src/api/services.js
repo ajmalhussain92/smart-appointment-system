@@ -13,7 +13,7 @@ export const appointmentAPI = {
   getWaitingTime:(doctorId, date)       => api.get('/appointments/waiting-time', { params: { doctorId, date } }),
   getMy:         (filters = {})         => api.get('/appointments/my', { params: filters }),
   book:          (data)                 => api.post('/appointments', data),
-  updateStatus:  (id, status, notes, medicines) => api.patch(`/appointments/${id}/status`, { status, notes, medicines }),
+  updateStatus:  (id, status, notes)    => api.patch(`/appointments/${id}/status`, { status, notes }),
   cancel:        (id)                   => api.patch(`/appointments/${id}/cancel`),
   markNoShow:    (id)                   => api.patch(`/appointments/${id}/no-show`),
 };
@@ -21,7 +21,6 @@ export const appointmentAPI = {
 export const doctorAPI = {
   getAll:              (filters = {})   => api.get('/doctors', { params: filters }),
   getStats:            ()               => api.get('/doctors/stats'),
-  getRankings:         ()               => api.get('/doctors/rankings'),
   toggleAvailability:  ()               => api.patch('/doctors/availability'),
   setOffDays:          (offDays)        => api.patch('/doctors/off-days', { offDays }),
   setConsultationType: (types)          => api.patch('/doctors/consultation-type', { consultationType: types }),

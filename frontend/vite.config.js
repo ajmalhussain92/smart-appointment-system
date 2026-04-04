@@ -7,7 +7,7 @@ export default defineConfig({
     host: '0.0.0.0',   // accessible from any device on same network
     port: 5173,
     proxy: {
-      '/api': 'http://10.56.237.210:5000',
+      '/api': 'http://localhost:5000',
     },
   },
 })

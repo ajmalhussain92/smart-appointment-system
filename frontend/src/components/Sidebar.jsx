@@ -10,7 +10,8 @@ export default function Sidebar({ collapsed, mobileOpen }) {
   const isActive = (p) => location.pathname === p;
 
   const doctorLinks = [
-    { path: '/dashboard', icon: 'bi-grid-1x2-fill', label: 'Dashboard' },
+    { path: '/dashboard', icon: 'bi-grid-1x2-fill',      label: 'Dashboard' },
+    { path: '/dashboard', icon: 'bi-people-fill',         label: 'Patient Queue' },
   ];
 
   const patientLinks = [
@@ -43,7 +44,7 @@ export default function Sidebar({ collapsed, mobileOpen }) {
         {links.map((link, i) => (
           <button
             key={i}
-            className={`nav-item ${isActive(link.path) ? 'active' : ''}`}
+            className={`nav-item ${isActive(link.path) && i === 0 ? 'active' : ''}`}
             onClick={() => { navigate(link.path); toggleCollapse(); }}
             title={collapsed ? link.label : ''}
           >

@@ -126,23 +126,18 @@ img { max-width: 100%; }
 /* ═══════════════════════════════════════════════════════════
    LAYOUT
 ═══════════════════════════════════════════════════════════ */
-.app-wrapper { display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
+.app-wrapper { display: flex; min-height: 100vh; background: var(--bg); }
 
 .main-area {
   margin-left: var(--sidebar-w);
-  width: calc(100% - var(--sidebar-w));
-  height: 100vh;
+  flex: 1;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1),
-              width      0.28s cubic-bezier(0.4,0,0.2,1);
+  transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
   background: var(--bg);
 }
-.main-area.collapsed {
-  margin-left: var(--sidebar-collapsed-w);
-  width: calc(100% - var(--sidebar-collapsed-w));
-}
+.main-area.collapsed { margin-left: var(--sidebar-collapsed-w); }
 
 /* ═══════════════════════════════════════════════════════════
    SIDEBAR
@@ -315,14 +310,7 @@ img { max-width: 100%; }
 /* ═══════════════════════════════════════════════════════════
    PAGE CONTENT
 ═══════════════════════════════════════════════════════════ */
-.page-content {
-  padding: 20px 24px;
-  flex: 1;
-  width: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
+.page-content { padding: 16px; flex: 1; }
 
 /* ═══════════════════════════════════════════════════════════
    CARDS
@@ -371,18 +359,6 @@ img { max-width: 100%; }
 /* ═══════════════════════════════════════════════════════════
    TABLE
 ═══════════════════════════════════════════════════════════ */
-.table-fixed-wrap {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: auto;
-}
-.table-fixed-wrap thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--surface-2);
-}
 .pro-table { width: 100%; border-collapse: collapse; }
 .pro-table thead tr { background: var(--surface-2); border-bottom: 1px solid var(--border); }
 .pro-table th {
@@ -406,17 +382,14 @@ img { max-width: 100%; }
   padding: 3px 10px; border-radius: 20px;
   font-size: 11px; font-weight: 600; white-space: nowrap;
 }
-.badge-waiting    { background: var(--warning-light); color: #b45309; }
-.badge-pending    { background: var(--warning-light); color: #b45309; }
-.badge-confirmed  { background: var(--primary-light); color: #1d4ed8; }
-.badge-inprogress { background: rgba(124,58,237,0.12); color: #5b21b6; }
-.badge-completed  { background: var(--success-light); color: #027a48; }
-.badge-cancelled  { background: var(--danger-light);  color: #b42318; }
-.badge-noshow     { background: var(--surface-2);      color: var(--text-muted); }
-.badge-doctor     { background: var(--purple-light);   color: #5b21b6; }
-.badge-patient    { background: var(--primary-light);  color: #1d4ed8; }
-.badge-available  { background: var(--success-light);  color: #027a48; }
-.badge-busy       { background: var(--danger-light);   color: #b42318; }
+.badge-waiting   { background: var(--warning-light); color: #b45309; }
+.badge-completed { background: var(--success-light); color: #027a48; }
+.badge-cancelled { background: var(--danger-light);  color: #b42318; }
+.badge-noshow    { background: var(--surface-2);      color: var(--text-muted); }
+.badge-doctor    { background: var(--purple-light);   color: #5b21b6; }
+.badge-patient   { background: var(--primary-light);  color: #1d4ed8; }
+.badge-available { background: var(--success-light);  color: #027a48; }
+.badge-busy      { background: var(--danger-light);   color: #b42318; }
 
 /* ═══════════════════════════════════════════════════════════
    BUTTONS
@@ -479,53 +452,6 @@ img { max-width: 100%; }
 
 .progress { background: var(--border) !important; border-radius: 10px !important; height: 6px !important; }
 
-/* Grid equal-height columns */
-.row.g-3 > [class*='col'],
-.row.g-2 > [class*='col'] { display: flex; flex-direction: column; min-height: 0; }
-.row.g-3 > [class*='col'] > .card,
-.row.g-2 > [class*='col'] > .card { flex: 1; min-height: 0; }
-
-/* Dashboard 2-col grid — left scrolls, right stretches */
-.dash-grid {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 16px;
-  align-items: start;
-  min-height: 0;
-}
-.dash-grid-left {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-.dash-grid-right {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-height: 0;
-}
-
-/* Pagination */
-.pagination-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
-  background: var(--surface-2);
-  font-size: 12px; color: var(--text-muted);
-  flex-shrink: 0;
-}
-.pagination-bar .pages { display: flex; gap: 4px; }
-.pagination-bar button {
-  min-width: 30px; height: 30px; border-radius: 6px;
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--text); font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center;
-}
-.pagination-bar button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
-.pagination-bar button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-.pagination-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
-
 /* ═══════════════════════════════════════════════════════════
    ANIMATIONS
 ═══════════════════════════════════════════════════════════ */
@@ -545,20 +471,14 @@ img { max-width: 100%; }
   .sidebar { transform: translateX(-100%); width: var(--sidebar-w) !important; box-shadow: none; }
   .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
   .sidebar.collapsed { transform: translateX(-100%); }
-  .main-area, .main-area.collapsed {
-    margin-left: 0 !important;
-    width: 100% !important;
-  }
-  .dash-grid { grid-template-columns: 1fr; }
-  .dash-grid-left, .dash-grid-right { min-height: unset; }
+  .main-area, .main-area.collapsed { margin-left: 0 !important; }
 }
 
 @media (max-width: 767px) {
-  .page-content { padding: 12px 16px; }
+  .page-content { padding: 16px; }
   .top-header { padding: 0 16px; }
 }
 
 @media (max-width: 575px) {
   .stat-val { font-size: 22px; }
-  .page-content { padding: 10px 12px; }
 }

@@ -52,7 +52,7 @@ function AppLayout() {
 
         {user && <Sidebar collapsed={collapsed} mobileOpen={mobileOpen} />}
 
-        <div className={user ? `main-area${collapsed ? ' collapsed' : ''}` : ''}>
+        <div className={user ? `main-area${collapsed ? ' collapsed' : ''}` : ''} style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />

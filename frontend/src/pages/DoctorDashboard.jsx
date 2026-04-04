@@ -57,18 +57,18 @@ function QueueRow({ appt, position, onComplete, onNoShow, onCancel }) {
           {waitMins === 0 && <span style={{ marginLeft: 8, color: 'var(--success)', fontWeight: 600 }}>Ready now</span>}
         </div>
       </div>
-      <div className="d-flex gap-2">
-        <button className="btn btn-success btn-sm" style={{ fontSize: 11, padding: '4px 10px', whiteSpace: 'nowrap' }}
-          onClick={() => onComplete(appt._id)} title="Mark appointment as completed">
-          Done
+      <div className="d-flex gap-1">
+        <button className="btn btn-success btn-sm" style={{ fontSize: 11, padding: '3px 9px' }}
+          onClick={() => onComplete(appt._id)} title="Complete">
+          <i className="bi bi-check-lg" />
         </button>
-        <button className="btn btn-warning btn-sm" style={{ fontSize: 11, padding: '4px 10px', whiteSpace: 'nowrap' }}
-          onClick={() => onNoShow(appt._id)} title="Patient did not show up">
-          No Show
+        <button className="btn btn-secondary btn-sm" style={{ fontSize: 11, padding: '3px 9px' }}
+          onClick={() => onNoShow(appt._id)} title="No Show">
+          <i className="bi bi-person-dash" />
         </button>
-        <button className="btn btn-outline-danger btn-sm" style={{ fontSize: 11, padding: '4px 10px', whiteSpace: 'nowrap' }}
-          onClick={() => onCancel(appt._id)} title="Cancel this appointment">
-          Cancel
+        <button className="btn btn-outline-danger btn-sm" style={{ fontSize: 11, padding: '3px 9px' }}
+          onClick={() => onCancel(appt._id)} title="Cancel">
+          <i className="bi bi-x-lg" />
         </button>
       </div>
     </div>
@@ -84,7 +84,7 @@ export default function DoctorDashboard() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [offDays, setOffDays] = useState([]);
   const [consultTypes, setConsultTypes] = useState(['in-person']);
-  const [notesInput, setNotesInput] = useState({ id: null, notes: '', medicines: '' });
+  const [notesInput, setNotesInput] = useState({ id: null, value: '' });
   const today = new Date().toISOString().split('T')[0];
 
   const fetchData = useCallback(async (silent = false) => {
@@ -107,9 +107,8 @@ export default function DoctorDashboard() {
   }, [user?._id, fetchData]);
 
   const handleStatus = async (id, status) => {
-    const notes = notesInput.id === id ? notesInput.notes : '';
-    const medicines = notesInput.id === id ? notesInput.medicines : '';
-    try { await appointmentAPI.updateStatus(id, status, notes, medicines); setNotesInput({ id: null, notes: '', medicines: '' }); fetchData(true); } catch (e) { console.error(e); }
+    const notes = notesInput.id === id ? notesInput.value : '';
+    try { await appointmentAPI.updateStatus(id, status, notes); setNotesInput({ id: null, value: '' }); fetchData(true); } catch (e) { console.error(e); }
   };
   const handleCancel = async (id) => {
     if (!window.confirm('Cancel this appointment?')) return;
@@ -132,25 +131,23 @@ export default function DoctorDashboard() {
   };
 
   // ── Computed Data ────────────────────────────────────
-  const todayAppts = appointments.filter(a => a.date === today);
-  const waiting = appointments.filter(a => ['pending', 'confirmed', 'in-progress'].includes(a.status));
-  const todayDone = todayAppts.filter(a => a.status === 'completed');
+  const todayAppts  = appointments.filter(a => a.date === today);
+  const waiting     = appointments.filter(a => a.status === 'waiting');
+  const todayDone   = todayAppts.filter(a => a.status === 'completed');
   const utilization = todayAppts.length > 0 ? Math.round((todayDone.length / todayAppts.length) * 100) : 0;
 
   // Donut chart data
   const donutData = [
     { name: 'Completed', value: appointments.filter(a => a.status === 'completed').length, color: '#12b76a' },
-    { name: 'Pending', value: appointments.filter(a => a.status === 'pending').length, color: '#3b82f6' },
-    { name: 'Confirmed', value: appointments.filter(a => a.status === 'confirmed').length, color: '#7c3aed' },
-    { name: 'In Progress', value: appointments.filter(a => a.status === 'in-progress').length, color: '#f79009' },
+    { name: 'Waiting',   value: waiting.length,   color: '#3b82f6' },
     { name: 'Cancelled', value: appointments.filter(a => a.status === 'cancelled').length, color: '#f04438' },
-    { name: 'No-Show', value: appointments.filter(a => a.status === 'no-show').length, color: '#94a3b8' },
+    { name: 'No-Show',   value: appointments.filter(a => a.status === 'no-show').length,   color: '#94a3b8' },
   ].filter(d => d.value > 0);
 
   // Hourly bar chart — today's appointments by time slot
-  const SLOTS = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'];
+  const SLOTS = ['09:00 AM','09:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','02:00 PM','02:30 PM','03:00 PM','03:30 PM','04:00 PM','04:30 PM'];
   const hourlyData = SLOTS.map(slot => ({
-    slot: slot.replace(' AM', 'a').replace(' PM', 'p'),
+    slot: slot.replace(' AM','a').replace(' PM','p'),
     Booked: todayAppts.filter(a => a.timeSlot === slot).length,
     Available: todayAppts.filter(a => a.timeSlot === slot).length === 0 ? 1 : 0,
   }));
@@ -165,22 +162,22 @@ export default function DoctorDashboard() {
       day: d.toLocaleDateString('en', { weekday: 'short' }),
       Total: dayAppts.length,
       Completed: dayAppts.filter(a => a.status === 'completed').length,
-      Pending: dayAppts.filter(a => ['pending', 'confirmed', 'in-progress'].includes(a.status)).length,
+      Waiting: dayAppts.filter(a => a.status === 'waiting').length,
     };
   });
 
   const tabs = [
-    { key: 'queue', label: 'Live Queue', icon: 'bi-people-fill', count: waiting.length },
-    { key: 'charts', label: 'Analytics', icon: 'bi-bar-chart-fill', count: null },
-    { key: 'schedule', label: 'Today Schedule', icon: 'bi-calendar3', count: todayAppts.length },
-    { key: 'settings', label: 'Settings', icon: 'bi-gear-fill', count: null },
+    { key: 'queue',    label: 'Live Queue',     icon: 'bi-people-fill',    count: waiting.length },
+    { key: 'charts',   label: 'Analytics',      icon: 'bi-bar-chart-fill', count: null },
+    { key: 'schedule', label: 'Today Schedule', icon: 'bi-calendar3',      count: todayAppts.length },
+    { key: 'settings', label: 'Settings',       icon: 'bi-gear-fill',      count: null },
   ];
 
   const stats = [
-    { icon: 'bi-people-fill', label: 'In Queue', value: waiting.length, color: '#3b82f6', bg: 'var(--primary-light)' },
-    { icon: 'bi-check-circle-fill', label: 'Completed Today', value: todayDone.length, color: '#12b76a', bg: 'var(--success-light)' },
-    { icon: 'bi-bar-chart-fill', label: 'Utilization', value: `${utilization}%`, color: '#7c3aed', bg: 'var(--purple-light)' },
-    { icon: 'bi-calendar3', label: 'Total All Time', value: appointments.length, color: '#f79009', bg: 'var(--warning-light)' },
+    { icon: 'bi-people-fill',       label: 'In Queue',        value: waiting.length,    color: '#3b82f6', bg: 'var(--primary-light)' },
+    { icon: 'bi-check-circle-fill', label: 'Completed Today', value: todayDone.length,  color: '#12b76a', bg: 'var(--success-light)' },
+    { icon: 'bi-bar-chart-fill',    label: 'Utilization',     value: `${utilization}%`, color: '#7c3aed', bg: 'var(--purple-light)' },
+    { icon: 'bi-calendar3',         label: 'Total All Time',  value: appointments.length, color: '#f79009', bg: 'var(--warning-light)' },
   ];
 
   return (
@@ -188,6 +185,13 @@ export default function DoctorDashboard() {
       <TopHeader
         title="Doctor Dashboard"
         subtitle={`${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
+        actions={
+          <button className={`btn btn-sm ${isAvailable ? 'btn-success' : 'btn-danger'}`}
+            onClick={handleToggle} style={{ fontSize: 12 }}>
+            <i className="bi bi-circle-fill me-1" style={{ fontSize: 7 }} />
+            {isAvailable ? 'Available' : 'Unavailable'}
+          </button>
+        }
       />
 
       <div className="page-content">
@@ -209,10 +213,12 @@ export default function DoctorDashboard() {
           ))}
         </div>
 
-        <div className="dash-grid">
+        {/* ── Main Grid ── */}
+        <div className="row g-2">
+
           {/* ── Left: Tabs ── */}
-          <div className="dash-grid-left">
-            <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div className="col-12 col-xl-8">
+            <div className="card fade-in">
 
               {/* Tab Header */}
               <div className="card-header" style={{ padding: 0 }}>
@@ -245,17 +251,17 @@ export default function DoctorDashboard() {
                 </div>
               </div>
 
-              <div className="card-body p-0" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              <div className="card-body p-0">
                 {loading ? (
-                  <div className="d-flex justify-content-center align-items-center" style={{ height: 460 }}>
+                  <div className="d-flex justify-content-center align-items-center py-5 gap-3">
                     <div className="spinner-border text-primary" style={{ width: 26, height: 26, borderWidth: 3 }} />
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13, marginLeft: 10 }}>Loading...</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading...</span>
                   </div>
                 ) : (
                   <>
                     {/* ── Live Queue ── */}
                     {activeTab === 'queue' && (
-                      <div className="fade-in" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                      <div className="fade-in">
                         {waiting.length === 0 ? (
                           <div className="empty-state">
                             <i className="bi bi-check-circle-fill" style={{ fontSize: 36, opacity: 1, color: 'var(--success)' }} />
@@ -266,7 +272,7 @@ export default function DoctorDashboard() {
                           <div key={a._id}>
                             <QueueRow appt={a} position={i + 1}
                               onComplete={id => {
-                                if (notesInput.id !== id) { setNotesInput({ id, notes: '', medicines: '' }); return; }
+                                if (notesInput.id !== id) { setNotesInput({ id, value: '' }); return; }
                                 handleStatus(id, 'completed');
                               }}
                               onNoShow={id => handleStatus(id, 'cancelled')}
@@ -274,27 +280,21 @@ export default function DoctorDashboard() {
                             {notesInput.id === a._id && (
                               <div style={{ padding: '8px 16px 12px', background: 'var(--success-light)', borderBottom: '1px solid var(--border)' }}>
                                 <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--success)', marginBottom: 6 }}>
-                                  <i className="bi bi-pencil-fill me-1" />Complete Appointment
+                                  <i className="bi bi-pencil-fill me-1" />Add prescription/notes (optional)
                                 </div>
-                                <div className="d-flex flex-column gap-2">
+                                <div className="d-flex gap-2">
                                   <input className="form-control" style={{ fontSize: 12 }}
-                                    placeholder="Medicines (e.g. Paracetamol 500mg twice daily)"
-                                    value={notesInput.medicines}
-                                    onChange={e => setNotesInput(n => ({ ...n, medicines: e.target.value }))} />
-                                  <input className="form-control" style={{ fontSize: 12 }}
-                                    placeholder="Notes / advice (optional)"
-                                    value={notesInput.notes}
-                                    onChange={e => setNotesInput(n => ({ ...n, notes: e.target.value }))} />
-                                  <div className="d-flex gap-2">
-                                    <button className="btn btn-success btn-sm flex-fill" style={{ fontSize: 12 }}
-                                      onClick={() => handleStatus(a._id, 'completed')}>
-                                      <i className="bi bi-check-lg me-1" />Confirm Done
-                                    </button>
-                                    <button className="btn btn-outline-secondary btn-sm" style={{ fontSize: 12 }}
-                                      onClick={() => setNotesInput({ id: null, notes: '', medicines: '' })}>
-                                      <i className="bi bi-x-lg" />
-                                    </button>
-                                  </div>
+                                    placeholder="e.g. Paracetamol 500mg, rest for 2 days..."
+                                    value={notesInput.value}
+                                    onChange={e => setNotesInput({ id: a._id, value: e.target.value })} />
+                                  <button className="btn btn-success btn-sm" style={{ fontSize: 12, whiteSpace: 'nowrap' }}
+                                    onClick={() => handleStatus(a._id, 'completed')}>
+                                    <i className="bi bi-check-lg me-1" />Confirm
+                                  </button>
+                                  <button className="btn btn-outline-secondary btn-sm" style={{ fontSize: 12 }}
+                                    onClick={() => setNotesInput({ id: null, value: '' })}>
+                                    <i className="bi bi-x-lg" />
+                                  </button>
                                 </div>
                               </div>
                             )}
@@ -331,8 +331,7 @@ export default function DoctorDashboard() {
                               <Tooltip content={<CustomTooltip />} />
                               <Legend wrapperStyle={{ fontSize: 12 }} />
                               <Area type="monotone" dataKey="Total" stroke="#3b82f6" strokeWidth={2} fill="url(#colorTotal)" />
-                              <Area type="monotone" dataKey="Pending" stroke="#f79009" strokeWidth={2} fill="url(#colorDone)" />
-                              <Area type="monotone" dataKey="Completed" stroke="#12b76a" strokeWidth={2} fill="url(#colorTotal)" />
+                              <Area type="monotone" dataKey="Completed" stroke="#12b76a" strokeWidth={2} fill="url(#colorDone)" />
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
@@ -341,7 +340,7 @@ export default function DoctorDashboard() {
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
                             <i className="bi bi-clock-history me-2" style={{ color: 'var(--warning)' }} />
-                            Today&#39;s Hourly Slot Distribution
+                            Today's Hourly Slot Distribution
                           </div>
                           <ResponsiveContainer width="100%" height={180}>
                             <BarChart data={hourlyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -358,7 +357,7 @@ export default function DoctorDashboard() {
 
                     {/* ── Today Schedule ── */}
                     {activeTab === 'schedule' && (
-                      <div className="fade-in" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                      <div className="fade-in">
                         {todayAppts.length === 0 ? (
                           <div className="empty-state">
                             <i className="bi bi-calendar-x" />
@@ -373,15 +372,15 @@ export default function DoctorDashboard() {
                               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{a.timeSlot.split(' ')[0]}</div>
                               <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.timeSlot.split(' ')[1]}</div>
                             </div>
-                            <div style={{ flex: 1, padding: '11px 14px', background: ['pending', 'confirmed', 'in-progress'].includes(a.status) && a.queuePosition === 1 ? 'var(--primary-light)' : 'transparent' }}>
+                            <div style={{ flex: 1, padding: '11px 14px', background: a.status === 'waiting' && a.queuePosition === 1 ? 'var(--primary-light)' : 'transparent' }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                                 <div>
                                   <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{a.patient?.name}</div>
                                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Queue #{a.queuePosition}</div>
                                 </div>
                                 <div className="d-flex align-items-center gap-2">
-                                  <span className={`badge-status badge-${a.status === 'in-progress' ? 'inprogress' : a.status === 'no-show' ? 'noshow' : a.status}`}>{a.status}</span>
-                                  {['pending', 'confirmed', 'in-progress'].includes(a.status) && (
+                                  <span className={`badge-status badge-${a.status}`}>{a.status}</span>
+                                  {a.status === 'waiting' && (
                                     <button className="btn btn-success btn-sm" style={{ fontSize: 10, padding: '2px 8px' }}
                                       onClick={() => handleStatus(a._id, 'completed')}>
                                       <i className="bi bi-check-lg" />
@@ -394,42 +393,6 @@ export default function DoctorDashboard() {
                         ))}
                       </div>
                     )}
-
-                    {/* ── Settings ── */}
-                    {activeTab === 'settings' && (
-                      <div className="fade-in" style={{ padding: 16 }}>
-                        <div className="d-flex flex-column gap-4">
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>Consultation Type</div>
-                            <div className="d-flex gap-2">
-                              {['in-person', 'online'].map(t => (
-                                <button key={t} className={`btn btn-sm ${consultTypes.includes(t) ? 'btn-primary' : 'btn-outline-secondary'}`}
-                                  onClick={() => handleConsultType(t)} style={{ fontSize: 12 }}>
-                                  {t === 'in-person' ? 'In-Person' : 'Online'}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>Off Days</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
-                              {Array.from({ length: 7 }, (_, i) => {
-                                const d = new Date();
-                                d.setDate(d.getDate() + i);
-                                const dateStr = d.toISOString().split('T')[0];
-                                const isOff = offDays.includes(dateStr);
-                                return (
-                                  <button key={dateStr} className={`btn btn-sm ${isOff ? 'btn-danger' : 'btn-outline-secondary'}`}
-                                    onClick={() => handleOffDays(dateStr)} style={{ fontSize: 11 }}>
-                                    {d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </>
                 )}
               </div>
@@ -437,111 +400,113 @@ export default function DoctorDashboard() {
           </div>
 
           {/* ── Right Panel ── */}
-          <div className="dash-grid-right">
+          <div className="col-12 col-xl-4">
+            <div className="d-flex flex-column gap-2">
 
-          {/* Donut Chart */}
-          <div className="card scale-in">
-            <div className="card-header">
-              <div className="card-title-text">
-                <i className="bi bi-pie-chart-fill me-2" style={{ color: 'var(--purple)' }} />
-                Appointment Status
-              </div>
-              <div className="card-subtitle-text">All time breakdown</div>
-            </div>
-            <div className="card-body">
-              {donutData.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: '20px 0' }}>No data yet</div>
-              ) : (
-                <>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <PieChart>
-                      <Pie data={donutData} cx="50%" cy="50%" innerRadius={50} outerRadius={75}
-                        paddingAngle={3} dataKey="value">
-                        {donutData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
+              {/* Donut Chart */}
+              <div className="card scale-in">
+                <div className="card-header">
+                  <div className="card-title-text">
+                    <i className="bi bi-pie-chart-fill me-2" style={{ color: 'var(--purple)' }} />
+                    Appointment Status
+                  </div>
+                  <div className="card-subtitle-text">All time breakdown</div>
+                </div>
+                <div className="card-body">
+                  {donutData.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: '20px 0' }}>No data yet</div>
+                  ) : (
+                    <>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <PieChart>
+                          <Pie data={donutData} cx="50%" cy="50%" innerRadius={50} outerRadius={75}
+                            paddingAngle={3} dataKey="value">
+                            {donutData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 4 }}>
+                        {donutData.map(d => (
+                          <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
+                            <span style={{ color: 'var(--text-muted)' }}>{d.name}</span>
+                            <span style={{ fontWeight: 700, color: 'var(--text)' }}>{d.value}</span>
+                          </div>
                         ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 4 }}>
-                    {donutData.map(d => (
-                      <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
-                        <span style={{ color: 'var(--text-muted)' }}>{d.name}</span>
-                        <span style={{ fontWeight: 700, color: 'var(--text)' }}>{d.value}</span>
                       </div>
-                    ))}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Today Progress */}
+              <div className="card scale-in" style={{ animationDelay: '0.08s' }}>
+                <div className="card-header">
+                  <div className="card-title-text">
+                    <i className="bi bi-calendar-check-fill me-2" style={{ color: 'var(--primary)' }} />
+                    Today's Progress
                   </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Today Progress */}
-          <div className="card scale-in" style={{ animationDelay: '0.08s' }}>
-            <div className="card-header">
-              <div className="card-title-text">
-                <i className="bi bi-calendar-check-fill me-2" style={{ color: 'var(--primary)' }} />
-                Today&#39;s Progress
-              </div>
-              <div className="card-subtitle-text">{today}</div>
-            </div>
-            <div className="card-body">
-              {[
-                { label: 'Scheduled', value: todayAppts.length, color: 'var(--primary)' },
-                { label: 'Completed', value: todayDone.length, color: 'var(--success)' },
-                { label: 'In Queue', value: todayAppts.filter(a => ['pending', 'confirmed', 'in-progress'].includes(a.status)).length, color: 'var(--warning)' },
-                { label: 'Cancelled', value: todayAppts.filter(a => a.status === 'cancelled').length, color: 'var(--danger)' },
-              ].map(item => (
-                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.label}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: item.color }}>{item.value}</span>
+                  <div className="card-subtitle-text">{today}</div>
                 </div>
-              ))}
-              <div style={{ marginTop: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Completion Rate</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: utilization >= 70 ? 'var(--success)' : 'var(--warning)' }}>{utilization}%</span>
-                </div>
-                <div className="progress">
-                  <div className="progress-bar" style={{
-                    width: `${utilization}%`,
-                    background: utilization >= 70 ? 'var(--success)' : utilization >= 40 ? 'var(--warning)' : 'var(--danger)',
-                    transition: 'width 0.6s ease',
-                  }} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Availability */}
-          <div className="card scale-in" style={{ animationDelay: '0.12s' }}>
-            <div className="card-body">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>Availability</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                    {isAvailable ? 'Accepting patients' : 'Not accepting'}
+                <div className="card-body">
+                  {[
+                    { label: 'Scheduled', value: todayAppts.length,  color: 'var(--primary)' },
+                    { label: 'Completed', value: todayDone.length,   color: 'var(--success)' },
+                    { label: 'Waiting',   value: todayAppts.filter(a => a.status === 'waiting').length, color: 'var(--warning)' },
+                    { label: 'Cancelled', value: todayAppts.filter(a => a.status === 'cancelled').length, color: 'var(--danger)' },
+                  ].map(item => (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.label}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: item.color }}>{item.value}</span>
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Completion Rate</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: utilization >= 70 ? 'var(--success)' : 'var(--warning)' }}>{utilization}%</span>
+                    </div>
+                    <div className="progress">
+                      <div className="progress-bar" style={{
+                        width: `${utilization}%`,
+                        background: utilization >= 70 ? 'var(--success)' : utilization >= 40 ? 'var(--warning)' : 'var(--danger)',
+                        transition: 'width 0.6s ease',
+                      }} />
+                    </div>
                   </div>
                 </div>
-                <div onClick={handleToggle} style={{
-                  width: 44, height: 24, borderRadius: 12,
-                  background: isAvailable ? 'var(--success)' : 'var(--border-2)',
-                  position: 'relative', cursor: 'pointer', transition: 'background 0.25s', flexShrink: 0,
-                }}>
-                  <div style={{
-                    width: 18, height: 18, borderRadius: '50%', background: '#fff',
-                    position: 'absolute', top: 3,
-                    left: isAvailable ? 23 : 3,
-                    transition: 'left 0.25s',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                  }} />
+              </div>
+
+              {/* Availability */}
+              <div className="card scale-in" style={{ animationDelay: '0.12s' }}>
+                <div className="card-body">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>Availability</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {isAvailable ? 'Accepting patients' : 'Not accepting'}
+                      </div>
+                    </div>
+                    <div onClick={handleToggle} style={{
+                      width: 44, height: 24, borderRadius: 12,
+                      background: isAvailable ? 'var(--success)' : 'var(--border-2)',
+                      position: 'relative', cursor: 'pointer', transition: 'background 0.25s', flexShrink: 0,
+                    }}>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                        position: 'absolute', top: 3,
+                        left: isAvailable ? 23 : 3,
+                        transition: 'left 0.25s',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      }} />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
+            </div>
           </div>
         </div>
       </div>

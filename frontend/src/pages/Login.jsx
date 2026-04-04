@@ -9,7 +9,6 @@ export default function Login() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'patient', specialization: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const { login, register } = useAuth();
   const { theme, toggle } = useTheme();
@@ -31,32 +30,21 @@ export default function Login() {
 
   return (
     <>
-      <style>{`
-        @media (max-width: 991px) {
-          .login-page { flex-direction: column !important; }
-          .login-left { display: none !important; }
-          .login-right { width: 100% !important; height: 100vh !important; border-left: none !important; }
-          .login-form-wrap { padding: 0 20px !important; max-width: 100% !important; margin: 0 !important; }
-        }
-        @media (min-width: 992px) {
-          .login-page { flex-direction: row !important; }
-          .login-left { width: 60% !important; display: flex !important; align-items: center !important; justify-content: center !important; }
-          .login-right { width: 40% !important; border-left: 1px solid var(--border) !important; }
-          .login-form-wrap { padding: 0 32px !important; max-width: 360px !important; }
-        }
-      `}</style>
+      <div style={S.page}>
 
-      <div className="login-page" style={S.page}>
-        {/* ══ 60% LEFT PANEL (10% gap + 40% content full width + 10% gap) ════════ */}
-        <div className="login-left" style={{...S.left, background: theme === 'dark' ? 'linear-gradient(145deg, #0c1a2e 0%, #1a3a6e 55%, #1d4ed8 100%)' : 'linear-gradient(145deg, #e0e7ff 0%, #c7d2fe 55%, #a5b4fc 100%)'}} onClick={toggle}>
+        {/* ══ LEFT ══════════════════════════════════════════ */}
+        <div style={S.left} className="d-none d-lg-block">
+
+          {/* bg glow */}
           <div style={S.glow} />
           <div style={S.dots} />
 
           <div style={S.leftInner}>
+
             {/* Logo */}
             <div style={S.logo}>
               <div style={S.logoIcon}>
-                <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 20 }} />
+                <i className="bi bi-hospital-fill" style={{ color: '#fff', fontSize: 24 }} />
               </div>
               <div>
                 <div style={S.logoName}>SmartDoc</div>
@@ -65,13 +53,13 @@ export default function Login() {
             </div>
 
             {/* Heading */}
-            <h1 style={{...S.heading, color: theme === 'dark' ? '#fff' : '#1e293b'}}>
+            <h1 style={S.heading}>
               Intelligent<br />
-              <span style={{ color: theme === 'dark' ? '#60a5fa' : '#3b82f6' }}>Healthcare</span><br />
+              <span style={{ color: '#60a5fa' }}>Healthcare</span><br />
               Scheduling
             </h1>
 
-            <p style={{...S.desc, color: theme === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(30,41,59,0.7)'}}>
+            <p style={S.desc}>
               Optimize scheduling, reduce waiting time, and improve
               operational efficiency with real-time queue management.
             </p>
@@ -86,9 +74,9 @@ export default function Login() {
               ].map(f => (
                 <div key={f.text} style={S.featureRow}>
                   <div style={S.featureIcon}>
-                    <i className={`bi ${f.icon}`} style={{ color: theme === 'dark' ? '#60a5fa' : '#3b82f6', fontSize: 16 }} />
+                    <i className={`bi ${f.icon}`} style={{ color: '#60a5fa', fontSize: 18 }} />
                   </div>
-                  <span style={{...S.featureText, color: theme === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(30,41,59,0.9)'}}>{f.text}</span>
+                  <span style={S.featureText}>{f.text}</span>
                 </div>
               ))}
             </div>
@@ -102,23 +90,26 @@ export default function Login() {
                 { v: '100%', l: 'Real-time' },
               ].map(s => (
                 <div key={s.l} style={S.statItem}>
-                  <div style={{...S.statVal, color: theme === 'dark' ? '#60a5fa' : '#3b82f6'}}>{s.v}</div>
-                  <div style={{...S.statLbl, color: theme === 'dark' ? 'rgba(255,255,255,0.45)' : 'rgba(30,41,59,0.5)'}}>{s.l}</div>
+                  <div style={S.statVal}>{s.v}</div>
+                  <div style={S.statLbl}>{s.l}</div>
                 </div>
               ))}
             </div>
+
           </div>
         </div>
 
-        {/* ══ 40% RIGHT PANEL (background full) ════════ */}
-        <div className="login-right" style={S.right}>
+        {/* ══ RIGHT ═════════════════════════════════════════ */}
+        <div style={S.right}>
+
           {/* Theme toggle */}
           <button className="theme-toggle" onClick={toggle} style={S.themeBtn}>
             <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-stars-fill'}`}
               style={{ color: theme === 'dark' ? '#fbbf24' : '#6366f1' }} />
           </button>
 
-          <div className="login-form-wrap" style={S.formWrap}>
+          <div style={S.formWrap}>
+
             {/* Title */}
             <div style={{ marginBottom: 28 }}>
               <h2 style={S.formTitle}>
@@ -169,22 +160,10 @@ export default function Login() {
                   placeholder="Enter your email" value={form.email} onChange={handleChange} required />
               </div>
 
-              <div className="mb-3" style={{ position: 'relative' }}>
+              <div className="mb-3">
                 <label className="form-label">Password</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <input name="password" type={showPassword ? 'text' : 'password'} className="form-control"
-                    placeholder="Enter your password" value={form.password} onChange={handleChange} required
-                    style={{ paddingRight: 40 }} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'var(--text-muted)', fontSize: 16, padding: 0, display: 'flex',
-                      alignItems: 'center', justifyContent: 'center',
-                    }}>
-                    <i className={`bi ${showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`} />
-                  </button>
-                </div>
+                <input name="password" type="password" className="form-control"
+                  placeholder="Enter your password" value={form.password} onChange={handleChange} required />
               </div>
 
               {!isRegister && (
@@ -218,8 +197,8 @@ export default function Login() {
                 <div style={S.demoTitle}>Demo Credentials</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {[
-                    { role: 'Doctor',  email: 'doctor1@smartdoc.com', badge: 'badge-doctor' },
-                    { role: 'Patient', email: 'patient1@smartdoc.com',     badge: 'badge-patient' },
+                    { role: 'Doctor',  email: 'ayesha@smartdoc.com', badge: 'badge-doctor' },
+                    { role: 'Patient', email: 'ali@patient.com',     badge: 'badge-patient' },
                   ].map(d => (
                     <div key={d.email} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span className={`badge-status ${d.badge}`} style={{ fontSize: 10 }}>{d.role}</span>
@@ -232,6 +211,7 @@ export default function Login() {
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
@@ -246,20 +226,20 @@ const S = {
   page: {
     display: 'flex',
     height: '100vh',
-    width: '100%',
+    width: '100vw',
     overflow: 'hidden',
     background: 'var(--bg)',
   },
 
   /* Left */
   left: {
+    width: '60%',
     flexShrink: 0,
+    background: 'linear-gradient(145deg, #0c1a2e 0%, #1a3a6e 55%, #1d4ed8 100%)',
     position: 'relative',
     overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
   },
   dots: {
     position: 'absolute', inset: 0, opacity: 0.04,
@@ -276,44 +256,46 @@ const S = {
   },
   leftInner: {
     position: 'relative', zIndex: 1,
-    width: '66.67%',
-    padding: '32px 40px',
+    padding: '48px 52px 48px 15%',
+    width: '100%',
+    maxWidth: 680,
   },
 
-  logo: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 },
+  logo: { display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 },
   logoIcon: {
-    width: 48, height: 48, background: '#3b82f6', borderRadius: 12,
+    width: 60, height: 60, background: '#3b82f6', borderRadius: 16,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 4px 16px rgba(59,130,246,0.4)',
+    boxShadow: '0 6px 24px rgba(59,130,246,0.5)',
     flexShrink: 0,
   },
-  logoName: { fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: -0.5 },
-  logoSub:  { fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 },
+  logoName: { fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: -0.5 },
+  logoSub:  { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
 
   heading: {
-    fontSize: 48, fontWeight: 900,
-    lineHeight: 1.05, marginBottom: 14, letterSpacing: -2,
+    fontSize: 54, fontWeight: 900, color: '#fff',
+    lineHeight: 1.08, marginBottom: 20, letterSpacing: -2.5,
   },
   desc: {
-    fontSize: 14,
-    lineHeight: 1.6, marginBottom: 24, maxWidth: 460,
+    fontSize: 16, color: 'rgba(255,255,255,0.6)',
+    lineHeight: 1.8, marginBottom: 44, maxWidth: 460,
   },
 
-  features: { display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 },
-  featureRow: { display: 'flex', alignItems: 'center', gap: 12 },
+  features: { display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 48 },
+  featureRow: { display: 'flex', alignItems: 'center', gap: 16 },
   featureIcon: {
-    width: 36, height: 36, background: 'rgba(59,130,246,0.2)',
-    borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: 44, height: 44, background: 'rgba(59,130,246,0.2)',
+    borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  featureText: { fontSize: 13, fontWeight: 500 },
+  featureText: { fontSize: 15, color: 'rgba(255,255,255,0.8)', fontWeight: 500 },
 
-  stats: { display: 'flex', gap: 28 },
-  statItem: { textAlign: 'center', minWidth: 60 },
-  statVal: { fontSize: 26, fontWeight: 900, letterSpacing: -1 },
-  statLbl: { fontSize: 10, marginTop: 2, fontWeight: 500 },
+  stats: { display: 'flex', gap: 40 },
+  statItem: { textAlign: 'center' },
+  statVal: { fontSize: 32, fontWeight: 900, color: '#60a5fa', letterSpacing: -1 },
+  statLbl: { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 3, fontWeight: 500 },
 
   /* Right */
   right: {
+    width: '40%',
     flexShrink: 0,
     background: 'var(--surface)',
     borderLeft: '1px solid var(--border)',
@@ -330,6 +312,7 @@ const S = {
   formWrap: {
     width: '100%',
     maxWidth: 360,
+    padding: '0 32px',
   },
 
   formTitle: { fontSize: 24, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.5, marginBottom: 5 },

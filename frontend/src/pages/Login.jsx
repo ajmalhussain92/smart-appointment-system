@@ -74,7 +74,7 @@ export default function Login() {
               ].map(f => (
                 <div key={f.text} style={S.featureRow}>
                   <div style={S.featureIcon}>
-                    <i className={`bi ${f.icon}`} style={{ color: '#60a5fa', fontSize: 15 }} />
+                    <i className={`bi ${f.icon}`} style={{ color: '#60a5fa', fontSize: 18 }} />
                   </div>
                   <span style={S.featureText}>{f.text}</span>
                 </div>
@@ -255,42 +255,42 @@ const S = {
   },
   leftInner: {
     position: 'relative', zIndex: 1,
-    padding: '48px 52px 48px 20%',
+    padding: '48px 52px 48px 15%',
     width: '100%',
-    maxWidth: 520,
+    maxWidth: 680,
   },
 
   logo: { display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 },
   logoIcon: {
-    width: 52, height: 52, background: '#3b82f6', borderRadius: 14,
+    width: 60, height: 60, background: '#3b82f6', borderRadius: 16,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     boxShadow: '0 6px 24px rgba(59,130,246,0.5)',
     flexShrink: 0,
   },
-  logoName: { fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: -0.5 },
-  logoSub:  { fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
+  logoName: { fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: -0.5 },
+  logoSub:  { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
 
   heading: {
-    fontSize: 44, fontWeight: 900, color: '#fff',
-    lineHeight: 1.1, marginBottom: 18, letterSpacing: -2,
+    fontSize: 54, fontWeight: 900, color: '#fff',
+    lineHeight: 1.08, marginBottom: 20, letterSpacing: -2.5,
   },
   desc: {
-    fontSize: 15, color: 'rgba(255,255,255,0.55)',
-    lineHeight: 1.75, marginBottom: 40, maxWidth: 400,
+    fontSize: 16, color: 'rgba(255,255,255,0.6)',
+    lineHeight: 1.8, marginBottom: 44, maxWidth: 460,
   },
 
-  features: { display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 44 },
-  featureRow: { display: 'flex', alignItems: 'center', gap: 14 },
+  features: { display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 48 },
+  featureRow: { display: 'flex', alignItems: 'center', gap: 16 },
   featureIcon: {
-    width: 38, height: 38, background: 'rgba(59,130,246,0.2)',
-    borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: 44, height: 44, background: 'rgba(59,130,246,0.2)',
+    borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  featureText: { fontSize: 14, color: 'rgba(255,255,255,0.75)', fontWeight: 500 },
+  featureText: { fontSize: 15, color: 'rgba(255,255,255,0.8)', fontWeight: 500 },
 
-  stats: { display: 'flex', gap: 32 },
+  stats: { display: 'flex', gap: 40 },
   statItem: { textAlign: 'center' },
-  statVal: { fontSize: 26, fontWeight: 900, color: '#60a5fa', letterSpacing: -1 },
-  statLbl: { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2, fontWeight: 500 },
+  statVal: { fontSize: 32, fontWeight: 900, color: '#60a5fa', letterSpacing: -1 },
+  statLbl: { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 3, fontWeight: 500 },
 
   /* Right */
   right: {

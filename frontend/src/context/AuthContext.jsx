@@ -26,6 +26,8 @@ export const AuthProvider = ({ children }) => {
     try { await authAPI.logout(); } catch (e) { /* ignore */ }
     localStorage.removeItem('user');
     setUser(null);
+    // Force page reload to clear all stale state
+    window.location.href = '/login';
   };
 
   return (

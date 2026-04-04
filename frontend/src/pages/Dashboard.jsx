@@ -4,5 +4,9 @@ import PatientDashboard from './PatientDashboard';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  return user?.role === 'doctor' ? <DoctorDashboard /> : <PatientDashboard />;
+  if (!user) return null;
+  // key={user._id} forces full remount when user changes — clears stale data
+  return user.role === 'doctor'
+    ? <DoctorDashboard key={user._id} />
+    : <PatientDashboard key={user._id} />;
 }

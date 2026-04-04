@@ -22,14 +22,15 @@ export default function PatientDashboard() {
 
   const fetchData = useCallback(async (silent = false) => {
     try {
-      const { data } = await appointmentAPI.getMy();
+      const params = filter !== 'all' ? { status: filter } : {};
+      const { data } = await appointmentAPI.getMy(params);
       setAppointments(data);
       setLastRefresh(new Date());
     } catch (e) { console.error(e); }
     finally { if (!silent) setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData, filter]);
   useEffect(() => {
     const t = setInterval(() => fetchData(true), 30000);
     return () => clearInterval(t);
@@ -132,6 +133,7 @@ export default function PatientDashboard() {
                           <th>Doctor</th>
                           <th>Date</th>
                           <th>Time</th>
+                          <th>Type</th>
                           <th>Queue</th>
                           <th>Est. Wait</th>
                           <th>Status</th>
@@ -164,6 +166,17 @@ export default function PatientDashboard() {
                               </td>
                               <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.date}</td>
                               <td><span style={{ fontWeight: 600, fontSize: 13 }}>{a.timeSlot}</span></td>
+                              <td>
+                                {/* Type badge */}
+                                <span style={{
+                                  fontSize: 10, padding: '2px 7px', borderRadius: 10, fontWeight: 600,
+                                  background: a.type === 'online' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
+                                  color: a.type === 'online' ? '#6366f1' : '#059669',
+                                }}>
+                                  <i className={`bi ${a.type === 'online' ? 'bi-camera-video-fill' : 'bi-hospital-fill'} me-1`} style={{ fontSize: 9 }} />
+                                  {a.type === 'online' ? 'Online' : 'In-Person'}
+                                </span>
+                              </td>
                               <td>
                                 {a.status === 'waiting'
                                   ? <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: 13 }}>#{a.queuePosition}</span>

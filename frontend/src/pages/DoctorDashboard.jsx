@@ -82,6 +82,9 @@ export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('queue');
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [offDays, setOffDays] = useState([]);
+  const [consultTypes, setConsultTypes] = useState(['in-person']);
+  const [notesInput, setNotesInput] = useState({ id: null, value: '' });
   const today = new Date().toISOString().split('T')[0];
 
   const fetchData = useCallback(async (silent = false) => {
@@ -104,7 +107,8 @@ export default function DoctorDashboard() {
   }, [user?._id, fetchData]);
 
   const handleStatus = async (id, status) => {
-    try { await appointmentAPI.updateStatus(id, status); fetchData(true); } catch (e) { console.error(e); }
+    const notes = notesInput.id === id ? notesInput.value : '';
+    try { await appointmentAPI.updateStatus(id, status, notes); setNotesInput({ id: null, value: '' }); fetchData(true); } catch (e) { console.error(e); }
   };
   const handleCancel = async (id) => {
     if (!window.confirm('Cancel this appointment?')) return;
@@ -113,6 +117,17 @@ export default function DoctorDashboard() {
   const handleToggle = async () => {
     try { const { data } = await doctorAPI.toggleAvailability(); setIsAvailable(data.isAvailable); }
     catch (e) { console.error(e); }
+  };
+  const handleOffDays = async (date) => {
+    const updated = offDays.includes(date) ? offDays.filter(d => d !== date) : [...offDays, date];
+    setOffDays(updated);
+    try { await doctorAPI.setOffDays(updated); } catch (e) { console.error(e); }
+  };
+  const handleConsultType = async (type) => {
+    const updated = consultTypes.includes(type) ? consultTypes.filter(t => t !== type) : [...consultTypes, type];
+    if (updated.length === 0) return;
+    setConsultTypes(updated);
+    try { await doctorAPI.setConsultationType(updated); } catch (e) { console.error(e); }
   };
 
   // ── Computed Data ────────────────────────────────────
@@ -155,6 +170,7 @@ export default function DoctorDashboard() {
     { key: 'queue',    label: 'Live Queue',     icon: 'bi-people-fill',    count: waiting.length },
     { key: 'charts',   label: 'Analytics',      icon: 'bi-bar-chart-fill', count: null },
     { key: 'schedule', label: 'Today Schedule', icon: 'bi-calendar3',      count: todayAppts.length },
+    { key: 'settings', label: 'Settings',       icon: 'bi-gear-fill',      count: null },
   ];
 
   const stats = [
@@ -253,10 +269,36 @@ export default function DoctorDashboard() {
                             <p>No patients waiting right now</p>
                           </div>
                         ) : waiting.map((a, i) => (
-                          <QueueRow key={a._id} appt={a} position={i + 1}
-                            onComplete={id => handleStatus(id, 'completed')}
-                            onNoShow={id => handleStatus(id, 'cancelled')}
-                            onCancel={handleCancel} />
+                          <div key={a._id}>
+                            <QueueRow appt={a} position={i + 1}
+                              onComplete={id => {
+                                if (notesInput.id !== id) { setNotesInput({ id, value: '' }); return; }
+                                handleStatus(id, 'completed');
+                              }}
+                              onNoShow={id => handleStatus(id, 'cancelled')}
+                              onCancel={handleCancel} />
+                            {notesInput.id === a._id && (
+                              <div style={{ padding: '8px 16px 12px', background: 'var(--success-light)', borderBottom: '1px solid var(--border)' }}>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--success)', marginBottom: 6 }}>
+                                  <i className="bi bi-pencil-fill me-1" />Add prescription/notes (optional)
+                                </div>
+                                <div className="d-flex gap-2">
+                                  <input className="form-control" style={{ fontSize: 12 }}
+                                    placeholder="e.g. Paracetamol 500mg, rest for 2 days..."
+                                    value={notesInput.value}
+                                    onChange={e => setNotesInput({ id: a._id, value: e.target.value })} />
+                                  <button className="btn btn-success btn-sm" style={{ fontSize: 12, whiteSpace: 'nowrap' }}
+                                    onClick={() => handleStatus(a._id, 'completed')}>
+                                    <i className="bi bi-check-lg me-1" />Confirm
+                                  </button>
+                                  <button className="btn btn-outline-secondary btn-sm" style={{ fontSize: 12 }}
+                                    onClick={() => setNotesInput({ id: null, value: '' })}>
+                                    <i className="bi bi-x-lg" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}

@@ -6,6 +6,25 @@ const User = require('../models/User');
 
 const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
+const BLOCKED_DOMAINS = [
+  'mailinator.com', 'guerrillamail.com', 'tempmail.com', 'throwam.com',
+  'sharklasers.com', 'guerrillamailblock.com', 'grr.la', 'guerrillamail.info',
+  'yopmail.com', 'trashmail.com', 'maildrop.cc', 'dispostable.com',
+  'fakeinbox.com', 'spamgourmet.com', 'mytemp.email', 'temp-mail.org',
+  'tempinbox.com', 'discard.email', 'mailnull.com', 'spamcowboy.com',
+  'getairmail.com', 'filzmail.com', 'throwam.com', 'tempr.email',
+  'dispostable.com', 'mailnesia.com', 'mailnull.com', 'spamgourmet.com',
+  'trashmail.at', 'trashmail.io', 'trashmail.me', 'trashmail.net',
+  'tempmail.ninja', 'tempmail.plus', 'emailondeck.com', 'mohmal.com',
+  'getnada.com', 'mailtemp.info', 'spambox.us', '10minutemail.com',
+  'minutemail.com', 'tempinbox.com', 'throwaway.email', 'mailsac.com',
+];
+
+const isBlockedEmail = (email) => {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return BLOCKED_DOMAINS.includes(domain);
+};
+
 const register = async (req, res) => {
   const { name, email, password, role, specialization } = req.body;
 
@@ -15,6 +34,8 @@ const register = async (req, res) => {
   if (role === 'doctor' && !specialization)
     return res.status(400).json({ message: 'Specialization is required for doctors' });
 
+  if (isBlockedEmail(email))
+    return res.status(400).json({ message: 'Temporary or disposable email addresses are not allowed' });
   try {
     if (await User.findOne({ email: email.toLowerCase() }))
       return res.status(400).json({ message: 'Email already in use' });

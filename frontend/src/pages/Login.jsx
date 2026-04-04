@@ -233,7 +233,8 @@ const S = {
 
   /* Left */
   left: {
-    flex: 1,
+    width: '60%',
+    flexShrink: 0,
     background: 'linear-gradient(145deg, #0c1a2e 0%, #1a3a6e 55%, #1d4ed8 100%)',
     position: 'relative',
     overflow: 'hidden',
@@ -295,7 +296,7 @@ const S = {
   /* Right */
   right: {
     width: '40%',
-    minWidth: 380,
+    flexShrink: 0,
     background: 'var(--surface)',
     borderLeft: '1px solid var(--border)',
     display: 'flex',

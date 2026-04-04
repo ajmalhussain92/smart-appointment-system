@@ -239,7 +239,6 @@ const S = {
     overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
   },
   dots: {
     position: 'absolute', inset: 0, opacity: 0.04,
@@ -256,7 +255,7 @@ const S = {
   },
   leftInner: {
     position: 'relative', zIndex: 1,
-    padding: '48px 52px',
+    padding: '48px 52px 48px 20%',
     width: '100%',
     maxWidth: 520,
   },

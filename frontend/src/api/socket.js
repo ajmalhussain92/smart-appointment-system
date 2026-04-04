@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://192.168.1.22:5000';
+const SOCKET_URL = 'http://10.56.237.210:5000';
 let socket = null;
 
 export const connectSocket = (token) => {
